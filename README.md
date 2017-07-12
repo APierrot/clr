@@ -1,2 +1,2 @@
-# clr-package
+# clr
 R package for Curve Linear Regression
