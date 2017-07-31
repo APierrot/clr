@@ -36,3 +36,4 @@ Amandine Pierrot <amandine.m.pierrot@gmail.com>
 with contributions and/or help from Qiwei Yao, Haeran Cho, Yannig Goude and
 Tony Aldon.
 }
+\keyword{package}

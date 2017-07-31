@@ -28,4 +28,5 @@
 #' Daily Electricity Load via Curve Linear Regression. In \emph{Modeling and
 #' Stochastic Learning for Forecasting in High Dimension}, edited by Anestis
 #' Antoniadis and Xavier Brossat, 35-54, Springer.
+#' @keywords package
 NULL
