@@ -8,7 +8,7 @@
 #' @docType data
 #' @author Amandine Pierrot <amandine.m.pierrot@gmail.com>
 #' @format A data frame with 104304 rows and 5 variables: \describe{
-#'   \item{timestamp}{timestamp, timezone = Europe/London}
+#'   \item{timestamp}{timestamp, the time zone being Europe/London}
 #'   \item{england_wales_demand}{British load, measured in MW, on average over
 #'   the half hour} \item{day_type}{type of the day of the week, from 1 for
 #'   Sunday to 7 for Saturday, 8 being banking holidays}

@@ -1,3 +1,5 @@
 devtools::use_data_raw()
 devtools::document()
 devtools::use_data(gb_load)
+devtools::use_package('dplyr')
+devtools::use_package('lubridate')

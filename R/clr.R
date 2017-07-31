@@ -3,6 +3,17 @@
 #'
 #' blabla
 #'
+#' @param y_data
+#' @param x_data
+#' @param clust
+#' @param qx_estimation
+#' @param scale_x
+#' @param ortho_y
+#' @param kj
+#' @param qy_estimation
+#' @param d_estimation
+#' @param pct
+#'
 #' @return
 #'
 #' @examples
