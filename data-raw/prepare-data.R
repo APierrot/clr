@@ -12,7 +12,7 @@ library(dplyr)
 lct <- Sys.getlocale('LC_TIME')
 Sys.setlocale('LC_TIME', 'C')
 
-load_data <- read.csv(file.path(rep, 'DemandData_2011-2016.csv'), sep = ',') %>%
+gb_load <- read.csv(file.path(rep, 'DemandData_2011-2016.csv'), sep = ',') %>%
   dplyr::select(SETTLEMENT_DATE, SETTLEMENT_PERIOD, ENGLAND_WALES_DEMAND) %>%
   dplyr::mutate(SETTLEMENT_DATE = lubridate::dmy(SETTLEMENT_DATE,
                                                  tz = 'Europe/London'),
@@ -26,8 +26,8 @@ Sys.setlocale('LC_TIME', lct)
 
 rm(lct, rep)
 
-save(load_data, file = file.path('data', 'gb_load.RData'))
+save(gb_load, file = file.path('data', 'gb_load.RData'))
 
-# modifier description gb_load
+# modifier description gb_load une fois que toutes les data seront finies
 
 

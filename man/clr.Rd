@@ -8,6 +8,9 @@ clr(y_data, x_data, clust, qx_estimation = "pctvar", scale_x = TRUE,
   ortho_y = TRUE, kj = NULL, qy_estimation = "pctvar",
   d_estimation = "cor", pct = 0.999)
 }
+\arguments{
+\item{pct}{}
+}
 \value{
 
 }

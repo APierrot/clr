@@ -4,15 +4,39 @@
 \alias{clrdata}
 \title{Title}
 \usage{
-clrdata(x = NULL, order_by = index(x), support_grid)
+clrdata(x, order_by, support_grid)
 }
 \arguments{
-\item{support_grid}{}
+\item{x}{a vector containing the time series values}
+
+\item{order_by}{a corresponding vector of unique time-dates - must be of
+class 'POSIXct'}
+
+\item{support_grid}{a vector corresponding to the support grid of functional
+data}
+}
+\value{
+An object of class \code{clrdata} with one function a row. As it
+inherits the \code{matrix} class, all \code{matrix} methods remain valid.
 }
 \description{
 \code{clrdata} is used to create a \code{clrdata} object from raw data
 inputs.
 }
 \examples{
+library(clr)
 
+data(gb_load)
+
+clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
+                    order_by = gb_load$TIMESTAMP,
+                    support_grid = 1:48)
+
+View(clr_load)
+head(clr_load)
+dim(clr_load)
+summary(clr_load)
+plot(1:48,
+     colMeans(clr_load, na.rm = TRUE),
+     type = 'l', xlab = 'Instant', ylab = 'Means of loads', col = 'coral')
 }
