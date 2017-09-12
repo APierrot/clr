@@ -7,7 +7,7 @@
 #'
 #' @docType data
 #' @author Amandine Pierrot <amandine.m.pierrot@gmail.com>
-#' @format A data frame with 105216 rows and 6 variables: \describe{
+#' @format A data frame with 105216 rows and 7 variables: \describe{
 #'   \item{SETTLEMENT_DATE}{date, the time zone being Europe/London}
 #'   \item{SETTLEMENT_PERIOD}{time of the day}
 #'   \item{TIMESTAMP}{date-time, the time zone being Europe/London}

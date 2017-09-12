@@ -13,7 +13,8 @@
 #'
 #' @return An object of class \code{clrdata} with one function a row. As it
 #' inherits the \code{matrix} class, all \code{matrix} methods remain valid.
-#' @import dplyr lubridate
+#' @import magrittr dplyr lubridate
+#'
 #' @export clrdata
 #'
 #' @examples
@@ -23,7 +24,7 @@
 #'
 #' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
 #'                     order_by = gb_load$TIMESTAMP,
-#'                     support_grid = gb_load$SETTLEMENT_PERIOD)
+#'                     support_grid = 1:48)
 #'
 #' View(clr_load)
 #' head(clr_load)
@@ -31,7 +32,18 @@
 #' summary(clr_load)
 #' plot(1:48,
 #'      colMeans(clr_load, na.rm = TRUE),
-#'      type = 'l', xlab = 'Instant', ylab = 'Mean of loads', col = 'coral')
+#'      xlab = 'Instant', ylab = 'Mean of loads',
+#'      type = 'l', col = 'coral')
+#'
+#' clr_weather <- clrdata(x = gb_load$TEMPERATURE,
+#'                        order_by = gb_load$TIMESTAMP,
+#'                        support_grid = 1:48)
+#' summary(clr_weather)
+#' plot(1:48,
+#'      colMeans(clr_weather, na.rm = TRUE),
+#'      xlab = 'Instant', ylab = 'Mean of temperatures',
+#'      type = 'l', col = 'cornflowerblue')
+
 
 clrdata <- function(x, order_by, support_grid) {
 

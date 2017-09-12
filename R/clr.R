@@ -3,8 +3,6 @@
 #'
 #' blabla
 #'
-#' @param y_data
-#' @param x_data
 #' @param clust
 #' @param qx_estimation
 #' @param scale_x
@@ -13,15 +11,27 @@
 #' @param qy_estimation
 #' @param d_estimation
 #' @param pct
+#' @param y
+#' @param x
 #'
 #' @return
 #'
 #' @examples
+#' library(clr)
 #'
-#' @export
+#' data(gb_load)
+#'
+#' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
+#'                     order_by = gb_load$TIMESTAMP,
+#'                     support_grid = 1:48)
+#'
+#' clr_weather <- clrdata(x = gb_load$TEMPERATURE,
+#'                        order_by = gb_load$TIMESTAMP,
+#'                        support_grid = 1:48)
+#' @export clr
 
 
-clr <- function(y_data, x_data, clust,
+clr <- function(y, x, clust,
                 qx_estimation = 'pctvar',
                 scale_x = TRUE,
                 ortho_y = TRUE,

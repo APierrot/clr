@@ -38,5 +38,15 @@ dim(clr_load)
 summary(clr_load)
 plot(1:48,
      colMeans(clr_load, na.rm = TRUE),
-     type = 'l', xlab = 'Instant', ylab = 'Means of loads', col = 'coral')
+     xlab = 'Instant', ylab = 'Mean of loads',
+     type = 'l', col = 'coral')
+
+clr_weather <- clrdata(x = gb_load$TEMPERATURE,
+                       order_by = gb_load$TIMESTAMP,
+                       support_grid = 1:48)
+summary(clr_weather)
+plot(1:48,
+     colMeans(clr_weather, na.rm = TRUE),
+     xlab = 'Instant', ylab = 'Mean of temperatures',
+     type = 'l', col = 'cornflowerblue')
 }

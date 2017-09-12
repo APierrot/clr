@@ -4,14 +4,17 @@
 \name{gb_load}
 \alias{gb_load}
 \title{Electricity load from Great Britain}
-\format{A data frame with 104304 rows and 5 variables: \describe{
-  \item{timestamp}{timestamp, the time zone being Europe/London}
-  \item{england_wales_demand}{British load, measured in MW, on average over
-  the half hour} \item{day_type}{type of the day of the week, from 1 for
-  Sunday to 7 for Saturday, 8 being banking holidays}
-  \item{weighted_temp}{temperature in Celsius} \item{mv_pct}{percentage of
-  missing values when averaging over weather stations, depending on the
-  weight of the station} }}
+\format{A data frame with 105216 rows and 7 variables: \describe{
+  \item{SETTLEMENT_DATE}{date, the time zone being Europe/London}
+  \item{SETTLEMENT_PERIOD}{time of the day}
+  \item{TIMESTAMP}{date-time, the time zone being Europe/London}
+  \item{ENGLAND_WALES_DEMAND}{British electric load, measured in MW, on
+  average over the half hour}
+  \item{TEMPERATURE}{observed temperature in Celsius}
+  \item{MV}{percentage of missing values when averaging over weather stations,
+  depending on the weight of the station}
+  \item{DAY_TYPE}{type of the day of the week, from 1 for Sunday to 7 for
+  Saturday, 8 being banking holidays}}}
 \source{
 \href{http://www2.nationalgrid.com/UK/Industry-information/Electricity-transmission-operational-data/Data-Explorer/}{National Grid}\cr
 \href{https://gis.ncdc.noaa.gov/maps/ncei/cdo/alltimes}{National Centers for Environmental Information}

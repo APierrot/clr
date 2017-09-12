@@ -4,12 +4,12 @@
 \alias{clr}
 \title{Fit a CLR via dimension reduction}
 \usage{
-clr(y_data, x_data, clust, qx_estimation = "pctvar", scale_x = TRUE,
-  ortho_y = TRUE, kj = NULL, qy_estimation = "pctvar",
-  d_estimation = "cor", pct = 0.999)
+clr(y, x, clust, qx_estimation = "pctvar", scale_x = TRUE, ortho_y = TRUE,
+  kj = NULL, qy_estimation = "pctvar", d_estimation = "cor",
+  pct = 0.999)
 }
 \arguments{
-\item{pct}{}
+\item{x}{}
 }
 \value{
 
@@ -18,5 +18,15 @@ clr(y_data, x_data, clust, qx_estimation = "pctvar", scale_x = TRUE,
 blabla
 }
 \examples{
+library(clr)
 
+data(gb_load)
+
+clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
+                    order_by = gb_load$TIMESTAMP,
+                    support_grid = 1:48)
+
+clr_weather <- clrdata(x = gb_load$TEMPERATURE,
+                       order_by = gb_load$TIMESTAMP,
+                       support_grid = 1:48)
 }
