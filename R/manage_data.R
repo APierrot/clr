@@ -23,7 +23,7 @@
 #'
 #' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
 #'                     order_by = gb_load$TIMESTAMP,
-#'                     support_grid = 1:48)
+#'                     support_grid = gb_load$SETTLEMENT_PERIOD)
 #'
 #' View(clr_load)
 #' head(clr_load)
