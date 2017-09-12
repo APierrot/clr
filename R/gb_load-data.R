@@ -16,7 +16,7 @@
 #'   \item{TEMPERATURE}{observed temperature in Celsius}
 #'   \item{MV}{percentage of missing values when averaging over weather stations,
 #'   depending on the weight of the station}
-#'   \item{day_type}{type of the day of the week, from 1 for Sunday to 7 for
+#'   \item{DAY_TYPE}{type of the day of the week, from 1 for Sunday to 7 for
 #'   Saturday, 8 being banking holidays}}
 #' @source
 #' \href{http://www2.nationalgrid.com/UK/Industry-information/Electricity-transmission-operational-data/Data-Explorer/}{National Grid}\cr

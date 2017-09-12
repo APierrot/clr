@@ -93,9 +93,21 @@ gb_weather <- data.frame(TIMESTAMP = interpol_data[['timestamp']],
 gb_load <- dplyr::left_join(gb_load, gb_weather, by = 'TIMESTAMP') %>%
   distinct()
 
+
+# DAY TYPES --------------------------------------------------------------------
+bank_hol <- timeDate::holidayLONDON(
+  unique(lubridate::year(gb_load[['TIMESTAMP']]))
+  )
+bank_hol <- lubridate::with_tz(as.POSIXct(bank_hol), tzone = 'Europe/London')
+gb_load <- gb_load %>%
+  mutate(wday7 = lubridate::wday(TIMESTAMP),
+         bh = ifelse(SETTLEMENT_DATE %in% bank_hol, 1, 0),
+         DAY_TYPE = ifelse(bh == 0, wday7, 8)) %>%
+  select(-wday7, -bh)
+rm(bank_hol)
+
 save(gb_load, file = file.path('data', 'gb_load.RData'))
 
-# modifier description gb_load une fois que toutes les data seront finies
 # penser à invalider jours avec valeurs négatives à un moment
 
 
