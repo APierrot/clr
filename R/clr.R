@@ -5,16 +5,18 @@
 #'
 #' @param clust
 #' @param qx_estimation
-#' @param scale_x
-#' @param ortho_y
 #' @param kj
 #' @param qy_estimation
 #' @param d_estimation
+#' @param Y
+#' @param X
+#' @param scale_X
+#' @param ortho_Y
 #' @param pct
-#' @param y
-#' @param x
 #'
 #' @return
+#'
+#' @export clr
 #'
 #' @examples
 #' library(clr)
@@ -25,44 +27,47 @@
 #'                     order_by = gb_load$TIMESTAMP,
 #'                     support_grid = 1:48)
 #'
-#' clr_weather <- clrdata(x = gb_load$TEMPERATURE,
-#'                        order_by = gb_load$TIMESTAMP,
-#'                        support_grid = 1:48)
-#' @export clr
+#' # data cleaning: replace zeros with NA
+#' clr_load[rowSums((clr_load == 0) * 1) > 0, ] <- NA
+#' matplot(t(clr_load), ylab = 'Daily loads', type = 'l')
+#'
+#' Y <- clr_load[2:nrow(clr_load), ]
+#' X <- clr_load[1:(nrow(clr_load)-1), ]
 
+# tester application et simulation avec matrix au lieu de clrdata
 
-clr <- function(y, x, clust,
+clr <- function(Y, X, clust,
                 qx_estimation = 'pctvar',
-                scale_x = TRUE,
-                ortho_y = TRUE,
+                scale_X = TRUE,
+                ortho_Y = TRUE,
                 kj = NULL,
                 qy_estimation = 'pctvar',
                 d_estimation = 'cor',
                 pct = 0.999) {
 
   if (missing(clust)) {
-    clust_desc <- data.frame(n = nrow(y_data))
-    clust_id <- list(1:nrow(y_data))
-    names(clust_id[[1]]) <- rownames(y_data)
+    clust_desc <- data.frame(n = nrow(Y))
+    clust_id <- list(1:nrow(Y))
+    names(clust_id[[1]]) <- rownames(Y)
   } else {
     clust_desc <- clust[['clust_desc']]
     clust_id <- clust[['clust_id']]
   }
 
-  y_nu <- ncol(y_data)
-  x_nu <- ncol(x_data)
+  y_nu <- ncol(Y)
+  x_nu <- ncol(X)
 
   clr_model <- vector('list', nrow(clust_desc))
 
   for (i in 1:nrow(clust_desc)) {
 
     # PART I: SVD
-
     idx <- clust_id[[i]]
-    y <- y_data[idx, ]
-    x <- x_data[idx, ]
+    y <- Y[idx, ]
+    x <- X[idx, ]
 
     id_s <- which(substr(rownames(y), 1, 4) == '2016')[1]
+    # ah ben c'est très très bien ça, pas du tout adhérent
     n <- nrow(y[1:(id_s - 1), ])
 
     y_mean <- colMeans(y[1:(id_s - 1), ], na.rm = TRUE)
