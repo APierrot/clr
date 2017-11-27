@@ -9,8 +9,8 @@ data_dir <- file.path('/Users', 'amandinepierrot', 'Documents', 'donnees', 'UK')
 # LOAD DATA --------------------------------------------------------------------
 
 # IMPORT
-lct <- Sys.getlocale('LC_TIME')
-Sys.setlocale('LC_TIME', 'C')
+# Sys.setenv(TZ = 'Europe/London')
+# PB between OS High Sierra and R
 
 gb_load <- read.csv(file.path(data_dir, 'DemandData_2011-2016.csv'), sep = ',') %>%
   dplyr::select(SETTLEMENT_DATE, SETTLEMENT_PERIOD, ENGLAND_WALES_DEMAND) %>%
@@ -22,10 +22,6 @@ gb_load <- read.csv(file.path(data_dir, 'DemandData_2011-2016.csv'), sep = ',') 
                   lubridate::dminutes(MINUTES)) %>%
   dplyr::select(SETTLEMENT_DATE, SETTLEMENT_PERIOD, TIMESTAMP,
                 ENGLAND_WALES_DEMAND)
-
-Sys.setlocale('LC_TIME', lct)
-
-rm(lct, rep)
 
 
 # WEATHER DATA -----------------------------------------------------------------
@@ -109,6 +105,6 @@ rm(bank_hol)
 save(gb_load, file = file.path('data', 'gb_load.RData'))
 
 # penser à invalider jours avec valeurs négatives à un moment
-
+# refaire jeu de données, erreur maintenant ??
 
 

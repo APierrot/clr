@@ -4,12 +4,12 @@
 \alias{clr}
 \title{Fit a CLR via dimension reduction}
 \usage{
-clr(y, x, clust, qx_estimation = "pctvar", scale_x = TRUE, ortho_y = TRUE,
+clr(Y, X, clust, qx_estimation = "pctvar", scale_X = TRUE, ortho_Y = TRUE,
   kj = NULL, qy_estimation = "pctvar", d_estimation = "cor",
   pct = 0.999)
 }
 \arguments{
-\item{x}{}
+\item{pct}{}
 }
 \value{
 
@@ -26,7 +26,10 @@ clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
                     order_by = gb_load$TIMESTAMP,
                     support_grid = 1:48)
 
-clr_weather <- clrdata(x = gb_load$TEMPERATURE,
-                       order_by = gb_load$TIMESTAMP,
-                       support_grid = 1:48)
+# data cleaning: replace zeros with NA
+clr_load[rowSums((clr_load == 0) * 1) > 0, ] <- NA
+matplot(t(clr_load), ylab = 'Daily loads', type = 'l')
+
+Y <- clr_load[2:nrow(clr_load), ]
+X <- clr_load[1:(nrow(clr_load)-1), ]
 }
