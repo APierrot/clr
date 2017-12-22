@@ -4,9 +4,8 @@
 \alias{clr}
 \title{Fit a CLR via dimension reduction}
 \usage{
-clr(Y, X, clust, qx_estimation = "pctvar", scale_X = TRUE, ortho_Y = TRUE,
-  kj = NULL, qy_estimation = "pctvar", d_estimation = "cor",
-  pct = 0.999)
+clr(Y, X, clust, qx_estimation = "pctvar", ortho_Y = TRUE,
+  qy_estimation = "pctvar", d_estimation = "cor", pct = 0.999)
 }
 \arguments{
 \item{pct}{}
@@ -20,6 +19,8 @@ blabla
 \examples{
 library(clr)
 
+Sys.setenv(TZ = 'Europe/London')
+PB between High Sierra and R
 data(gb_load)
 
 clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,

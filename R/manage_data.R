@@ -1,6 +1,6 @@
 
 
-#' Title
+#' Create an object of class clrdata
 #'
 #' \code{clrdata} is used to create a \code{clrdata} object from raw data
 #' inputs.
@@ -13,7 +13,8 @@
 #'
 #' @return An object of class \code{clrdata} with one function a row. As it
 #' inherits the \code{matrix} class, all \code{matrix} methods remain valid.
-#' @import magrittr dplyr lubridate
+#' @import magrittr dplyr
+#' @importFrom lubridate is.POSIXct date
 #'
 #' @export clrdata
 #'
@@ -92,7 +93,7 @@ clrdata <- function(x, order_by, support_grid) {
   class(clrmat) <- c('clrdata', 'matrix')
 
   if (n > nrow(df)) {
-    warning('Rows with less or more than ', nu,
+    message('Rows with less or more than ', nu,
             ' values were replaced with NA')
   }
 

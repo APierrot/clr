@@ -3,5 +3,6 @@
 export(clr)
 export(clrdata)
 import(dplyr)
-import(lubridate)
 import(magrittr)
+importFrom(lubridate,date)
+importFrom(lubridate,is.POSIXct)

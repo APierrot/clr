@@ -5,16 +5,23 @@
 #'
 #' @param clust
 #' @param qx_estimation
-#' @param kj
 #' @param qy_estimation
 #' @param d_estimation
+#' @param ortho_Y
 #' @param Y
 #' @param X
-#' @param scale_X
-#' @param ortho_Y
-#' @param pct
 #'
-#' @return
+#' @return An object of class \code{clr} that can be used to compute predictions.
+#' This \code{clr} object is a list of lists: one list by cluster of data, each
+#' list including:
+#' \item{residuals}{A matrix with the residuals of d_hat simple linear
+#' regressions.}
+#' \item{b_hat}{}
+#' \item{sigma_hat}{}
+#' \item{xi_hat}{}
+#' \item{qx_hat}{}
+#' \item{qy_hat}{}
+#' \item{d_hat}{}
 #'
 #' @export clr
 #'
@@ -22,6 +29,7 @@
 #' library(clr)
 #'
 #' Sys.setenv(TZ = 'Europe/London')
+#' # PB between High Sierra and R
 #' data(gb_load)
 #'
 #' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
@@ -33,108 +41,186 @@
 #' matplot(t(clr_load), ylab = 'Daily loads', type = 'l')
 #'
 #' Y <- clr_load[2:nrow(clr_load), ]
-#' X <- clr_load[1:(nrow(clr_load)-1), ]
+#' X <- clr_load[1:(nrow(clr_load) - 1), ]
+#'
+#' begin_pred <- which(substr(rownames(Y), 1, 4) == '2016')[1]
+#' Y_train <- Y[1:(begin_pred - 1), ]
+#' X_train <- X[1:(begin_pred - 1), ]
+#'
+#' model <- clr(Y = Y_train, X = X_train)
 
-# tester application et simulation avec matrix au lieu de clrdata
 
-clr <- function(Y, X, clust,
-                qx_estimation = 'pctvar',
-                scale_X = TRUE,
+clr <- function(Y, X, clust = NULL,
+                qx_estimation = list(method = 'pctvar',
+                                     param = 0.999),
                 ortho_Y = TRUE,
-                kj = NULL,
-                qy_estimation = 'pctvar',
-                d_estimation = 'cor',
-                pct = 0.999) {
+                qy_estimation = list(method = 'pctvar',
+                                     param = 0.999),
+                d_estimation = list(method = 'cor',
+                                    param = 0.5)) {
 
-  if (missing(clust)) {
+  # Conditions on data trains
+  if (!is.matrix(Y) | !is.matrix(X)) {
+    stop('Y and X should be matrices')
+  }
+
+  if (nrow(Y) != nrow(X)) {
+    stop('Y and X should have the same number of rows!')
+  }
+
+  # option clust
+  if (is.null(clust)) {
     clust_desc <- data.frame(n = nrow(Y))
     clust_id <- list(1:nrow(Y))
     names(clust_id[[1]]) <- rownames(Y)
   } else {
-    clust_desc <- clust[['clust_desc']]
-    clust_id <- clust[['clust_id']]
+    clust_desc <- clust$clust_desc
+    clust_id <- clust$clust_id
   }
 
-  y_nu <- ncol(Y)
-  x_nu <- ncol(X)
+  Y_nu <- ncol(Y)
+  X_nu <- ncol(X)
 
-  clr_model <- vector('list', nrow(clust_desc))
+  # Conditions on qx_estimation
+  if (!(qx_estimation$method %in% c('ratio', 'ratioM', 'pctvar', 'fixed'))) {
+    stop('qx_estimation$method has to be one of ratio, ratioM, pctvar or fixed')
+  }
+
+  if (qx_estimation$method == 'pctvar' &
+      (qx_estimation$param > 1 | qx_estimation$param <= 0)) {
+    stop('qx_estimation$param value has to be between 0 and 1')
+  }
+
+  if (qx_estimation$method == 'ratioM' &
+      qx_estimation$param <= 0) {
+    stop('qx_estimation$param value has to be positive')
+  }
+
+  if (qx_estimation$method == 'fixed' &
+      !is.integer(qx_estimation$param)) {
+    stop('qx_estimation$param value has to be an integer')
+  }
+
+  if (qx_estimation$method == 'fixed' &
+      (qx_estimation$param <= 0 | qx_estimation$param > X_nu)) {
+    stop(pasteO('qx_estimation$param value has to be positive and lower than ',
+                'the dimension of X'))
+  }
+
+
+  # Conditions on qy_estimation
+  if (!(qy_estimation$method %in% c('ratio', 'ratioM', 'pctvar', 'fixed'))) {
+  stop('qy_estimation$method has to be one of ratio, ratioM, pctvar or fixed')
+  }
+
+  if (qy_estimation$method == 'pctvar' &
+      (qy_estimation$param > 1 | qy_estimation$param <= 0)) {
+    stop('qy_estimation$param value has to be between 0 and 1')
+  }
+
+  if (qy_estimation$method == 'ratioM' &
+      qy_estimation$param <= 0) {
+    stop('qy_estimation$param value has to be positive')
+  }
+
+  if (qy_estimation$method == 'fixed' &
+      !is.integer(qy_estimation$param)) {
+    stop('qy_estimation$param value has to be an integer')
+  }
+
+  if (qy_estimation$method == 'fixed' &
+      (qy_estimation$param <= 0 | qy_estimation$param > Y_nu)) {
+    stop(pasteO('qy_estimation$param value has to be positive and lower than ',
+                'the dimension of Y'))
+  }
+
+  # Conditions on d_estimation
+  if (!(d_estimation$method %in% c('ratio', 'pctvar', 'cor'))) {
+    stop('d_estimation$method has to be one of cor, ratio or pctvar')
+  }
+
+  if (d_estimation$method %in% c('pctvar', 'cor') &
+      (d_estimation$param > 1 | d_estimation$param <= 0)) {
+    stop('param value has to be between 0 and 1 ')
+  }
+
+
+  object <- vector('list', nrow(clust_desc))
 
   for (i in 1:nrow(clust_desc)) {
 
     # PART I: SVD
     idx <- clust_id[[i]]
-    y <- Y[idx, ]
-    x <- X[idx, ]
+    Y_clust <- Y[idx, ]
+    X_clust <- X[idx, ]
 
-    id_s <- which(substr(rownames(y), 1, 4) == '2016')[1]
-    # ah ben c'est très très bien ça, pas du tout adhérent
-    n <- nrow(y[1:(id_s - 1), ])
+    Y_mean <- colMeans(Y_clust, na.rm = TRUE)
+    Y_dm <- Y_clust - matrix(Y_mean,
+                             nrow = nrow(Y_clust),
+                             ncol = ncol(Y_clust),
+                             byrow = TRUE)  # de-meaned Y
 
-    y_mean <- colMeans(y[1:(id_s - 1), ], na.rm = TRUE)
-    y_dm <- y[1:(id_s - 1), ] - matrix(y_mean,
-                                       nrow = n,
-                                       ncol = ncol(y),
-                                       byrow = TRUE)  # de-meaned y
+    X_mean <- colMeans(X_clust, na.rm = TRUE)
+    X_sd <- apply(X_clust, 2, sd, na.rm = TRUE)
+    # re-scaled X
+    X_rs <- (X_clust - matrix(X_mean,
+                              nrow = nrow(X_clust),
+                              ncol = ncol(X_clust),
+                              byrow = TRUE)) / matrix(X_sd,
+                                                      nrow = nrow(X_clust),
+                                                      ncol = ncol(X_clust),
+                                                      byrow = TRUE)
 
-    x_mean <- colMeans(x[1:(id_s - 1), ], na.rm = TRUE)
-    x_sd <- apply(x[1:(id_s - 1), ], 2, sd, na.rm = TRUE)
-    # re-scaled x
-    x_rs <- (x[1:(id_s - 1), ] - matrix(x_mean,
-                                        nrow = n,
-                                        ncol = ncol(x),
-                                        byrow = TRUE)) / matrix(x_sd,
-                                                                nrow = n,
-                                                                ncol = ncol(x),
-                                                                byrow = TRUE)
-    # Orthogonalize x: extract low-dim structure of x_rs
-    if (ortho_x) {
-
-      t1 <- svd(var(x_rs, na.rm = TRUE))
-      omega <- t1$d
-      qx_hat <- switch(qx_estimation,
-                       ratio = which.max(omega[1:(ncol(x_rs) - 1)] / omega[2:ncol(x_rs)]),
-                       ratioM = max(which(omega[1:(ncol(x_rs) - 1)] / omega[2:ncol(x_rs)] > 2)),
-                       pctvar = {
-                         k <- 1
-                         while ((sum(omega[1:k]) / sum(omega)) < pct) {
-                           k <- k + 1
-                         }
-                         k
-                       },
-                       as.numeric(qx_estimation))
-      # first qx_hat  eigenfunctions
-      gamma <- t1$u[, 1:qx_hat, drop = FALSE]
-      # Standardized transformation for X
-      if (qx_hat > 1) {
-        GAMMA <- gamma %*% diag(omega[1:qx_hat] ^ (-0.5))
-      } else {
-        GAMMA <- gamma * omega[1:qx_hat] ^ (-0.5)
-      }
-      # xx is new standardized X
-      xx  <- x_rs %*% GAMMA
-      # var(xx, na.rm = TRUE) = Id
+    # Orthogonalize X: extract low-dim structure of X_rs
+    t1 <- svd(var(X_rs, na.rm = TRUE))
+    omega <- t1$d
+    qx_hat <- switch(qx_estimation$method,
+                     ratio = which.max(omega[1:(ncol(X_rs) - 1)] /
+                                         omega[2:ncol(X_rs)]),
+                     ratioM = max(which(omega[1:(ncol(X_rs) - 1)] /
+                                          omega[2:ncol(X_rs)] >
+                                          qx_estimation$param)),
+                     pctvar = {
+                       k <- 1
+                       while ((sum(omega[1:k]) / sum(omega)) <
+                              qx_estimation$param) {
+                         k <- k + 1
+                       }
+                       k
+                     },
+                     fixed = qx_estimation$param)
+    # first qx_hat eigenfunctions
+    gamma <- t1$u[, 1:qx_hat, drop = FALSE]
+    # Standardized transformation for X
+    if (qx_hat > 1) {
+      GAMMA <- gamma %*% diag(omega[1:qx_hat] ^ (-0.5))
     } else {
-      xx <- x_rs
+      GAMMA <- gamma * omega[1:qx_hat] ^ (-0.5)
     }
+    # XX is new standardized X
+    XX  <- X_rs %*% GAMMA
+    # var(XX, na.rm = TRUE) = Id
 
 
-    # Orthogonalize y: extract low-dim structure of y_dm
-    if (ortho_y) {
-
-      t2 <- svd(var(y_dm, na.rm = TRUE))
+    # Orthogonalize Y: extract low-dim structure of Y_dm
+    if (ortho_Y) {
+      t2 <- svd(var(Y_dm, na.rm = TRUE))
       tau <- t2$d
-      qy_hat <- switch(qy_estimation,
-                       ratio = which.max(tau[1:(ncol(y_dm) - 1)] / tau[2:ncol(y_dm)]),
-                       ratioM = max(which(tau[1:(ncol(y_dm) - 1)] / tau[2:ncol(y_dm)] > 2)),
+      qy_hat <- switch(qy_estimation$method,
+                       ratio = which.max(tau[1:(ncol(Y_dm) - 1)] /
+                                           tau[2:ncol(Y_dm)]),
+                       ratioM = max(which(tau[1:(ncol(Y_dm) - 1)] /
+                                            tau[2:ncol(Y_dm)] >
+                                            qy_estimation$param)),
                        pctvar = {
                          k <- 1
-                         while (sum(tau[1:k]) / sum(tau) < pct) {
+                         while (sum(tau[1:k]) / sum(tau) <
+                                qy_estimation$param) {
                            k <- k + 1
                          }
                          k
                        },
-                       as.numeric(qy_estimation))
+                       fixed = qy_estimation$param)
       # first qy_hat  eigenfunctions
       delta <- t2$u[, 1:qy_hat, drop = FALSE]
       # Standardized transformation for Y
@@ -144,28 +230,28 @@ clr <- function(Y, X, clust,
         DELTA <- delta * tau[1:qy_hat] ^ (-0.5)
       }
       # yy is new standardized Y
-      yy  <- y_dm %*% DELTA
-
+      YY  <- Y_dm %*% DELTA
     } else {
-      yy <- y_dm
+      YY <- Y_dm
     }
 
 
     # SVD for cov(yy, xx)
-    TT <- svd(cov(yy, xx, use = 'complete.obs'))
+    TT <- svd(cov(YY, XX, use = 'complete.obs'))
     lambda <- TT$d
     l <- length(lambda)
 
     d_hat <- l
 
     if (d_hat > 1) {
-      d_hat <- switch(d_estimation,
+      d_hat <- switch(d_estimation$method,
                       max = l,
-                      cor = max(which(lambda > 0.5)),
+                      cor = max(which(lambda > d_estimation$param)),
                       ratio = which.max(lambda[1:(l - 1)] / lambda[2:l]),
                       pctvar = {
                         k <- 1
-                        while ((sum(lambda[1:k]) / sum(lambda)) < pct) {
+                        while ((sum(lambda[1:k]) / sum(lambda)) <
+                               d_estimation$param) {
                           k <- k + 1
                         }
                         k
@@ -175,11 +261,11 @@ clr <- function(Y, X, clust,
     phi <- TT$u
     psi <- TT$v
 
-    xi <- yy %*% phi
-    eta <- xx %*% psi
+    xi <- YY %*% phi
+    eta <- XX %*% psi
 
     # Transformation matrices for Y and X, to be used for prediction
-    if (ortho_y) {
+    if (ortho_Y) {
       DELTA <- DELTA %*% phi
       if (qy_hat > 1) {
         INV_DELTA <- t(phi) %*% t(delta %*% solve(diag(tau[1:qy_hat] ^ (-0.5))))
@@ -188,148 +274,39 @@ clr <- function(Y, X, clust,
       }
     }
 
-    if (ortho_x) {
-      GAMMA <- GAMMA %*% psi
-    }
-
-
 
     # PART II: 1-1 LINEAR REGRESSION \xi_j on \eta_j
+    lm_rows <- sum(!is.na(rowSums(cbind(xi, eta))))
 
-    lm_row <- sum(!is.na(rowSums(cbind(xi, eta))))
-
-    if (ortho_x) {
-
-      b_hat <- vector(length = l)
-      sigma_hat <- vector(length = l)
-      res <- matrix(nrow = lm_row, ncol = l)
-      for (j in 1:l) {
-        t1 <- lm(xi[, j] ~ eta[, j] - 1)
-        b_hat[j] <- t1$coefficients          # Estimated slope of j-th regression
-        sigma_hat[j] <- (summary(t1)$sigma)  # STD of residuals for j-th regression
-        res[, j] <- t1$residuals             # Residuals of j-th regression
-      }
-      clr_model[[i]][['res']] <- res
-      clr_model[[i]][['qy']] <- l
-
-    } else {
-
-      if (kj > l) stop('kj has to be lower than min(qx, qy)')
-      b_hat <- matrix(nrow = l, ncol = kj)
-      sigma_hat <- matrix(nrow = l, ncol = kj)
-      res <- matrix(nrow = lm_row, ncol = l)
-      for (j in 1:l) {
-        t1 <- lm(xi[, j] ~ eta[, 1:kj] - 1)
-        b_hat[j, ] <- t1$coefficients          # Estimated slope of j-th regression
-        sigma_hat[j, ] <- summary(t1)$sigma  # STD of residuals for j-th regression
-        res[, j] <- t1$residuals             # Residuals of j-th regression
-      }
-      clr_model[[i]][['res']] <- res
-      clr_model[[i]][['qy']] <- ncol(xi)
+    b_hat <- vector(length = d_hat)
+    sigma_hat <- vector(length = d_hat)
+    res <- matrix(nrow = lm_rows, ncol = d_hat)
+    for (j in 1:d_hat) {
+      t1 <- lm(xi[, j] ~ eta[, j] - 1)
+      b_hat[j] <- t1$coefficients          # Estimated slope of j-th regression
+      sigma_hat[j] <- (summary(t1)$sigma)  # STD of residuals for j-th regression
+      res[, j] <- t1$residuals             # Residuals of j-th regression
     }
 
+    object[[i]]$residuals <- res
+    object[[i]]$b_hat <- b_hat
+    object[[i]]$sigma_hat <- sigma_hat
 
-    clr_model[[i]][['d_hat']] <- d_hat
-    clr_model[[i]][['sigma_hat']] <- sigma_hat
+    xi_hat <- eta[, 1:d_hat] * matrix(b_hat,
+                                      nrow = nrow(eta),
+                                      ncol = d_hat,
+                                      byrow = TRUE)
 
-    if (ortho_x) {
-      xi_hat <- eta * matrix(b_hat,
-                             nrow = nrow(eta), ncol = ncol(eta), byrow = TRUE)
-    } else {
-      xi_hat <- eta[, 1:kj, drop = FALSE] %*% t(b_hat)
-    }
-
-    clr_model[[i]][['xi_hat']] <- xi_hat
-    clr_model[[i]][['y_dm']] <- y_dm
-    clr_model[[i]][['qx_hat']] <- ncol(xx)
-    clr_model[[i]][['qy_hat']] <- ncol(yy)
-
-    # PART III: CALCULATE PREDICTION
-
-    # trend pb: y_mean (in-sample), much higher than y_s_mean (out-sample)
-
-    # y_s (y to predict)
-    y_s <- y[id_s:nrow(y), , drop = FALSE]
-    x_s <- x[id_s:nrow(x), , drop = FALSE]
-
-    y_mean_s <- y_mean
-    x_mean_s <- x_mean
-
-    if (corr_mean) {
-      # with out-sample mean
-      y_mean_s <- colMeans(y_s, na.rm = TRUE)
-      x_mean_s <- colMeans(x_s, na.rm = TRUE)
-    }
-
-    y_s_dm <- y_s - matrix(y_mean_s,
-                           nrow = nrow(y_s),
-                           ncol = ncol(y_s),
-                           byrow = TRUE)
-    x_s_rs <- (x_s - matrix(x_mean_s,
-                            nrow = nrow(x_s),
-                            ncol = ncol(x_s),
-                            byrow = TRUE)) / matrix(x_sd,
-                                                    nrow = nrow(x_s),
-                                                    ncol = ncol(x_s),
-                                                    byrow = TRUE)
-
-    if (ortho_x) {
-
-      eta_s <- x_s_rs %*% GAMMA
-      xi_s_hat <- eta_s * matrix(b_hat,
-                                 nrow = nrow(eta_s),
-                                 ncol = ncol(eta_s),
-                                 byrow = TRUE)
-      if (ortho_y) {
-        y_s_hat <- (xi_s_hat[, 1:d_hat, drop = FALSE] %*% INV_DELTA[1:d_hat, , drop = FALSE]) +
-          matrix(y_mean_s,
-                 nrow = nrow(y_s),
-                 ncol = ncol(y_s),
-                 byrow = TRUE)
-        xi_s <- y_s_dm %*% DELTA
-      } else {
-        y_s_hat <- xi_s_hat[, 1:d_hat, drop = FALSE] %*% t(phi[, 1:d_hat, drop = FALSE]) +
-          matrix(y_mean_s,
-                 nrow = nrow(y_s),
-                 ncol = ncol(y_s),
-                 byrow = TRUE)
-        xi_s <- y_s_dm %*% phi
-      }
-
-    } else {
-      eta_s <- x_s_rs %*% psi
-      xi_s_hat <- eta_s[, 1:kj, drop = FALSE] %*% t(b_hat)
-      y_s_hat <- xi_s_hat[, 1:d_hat, drop = FALSE] %*% t(phi[, 1:d_hat, drop = FALSE]) +
-        matrix(y_mean_s,
-               nrow = nrow(y_s),
-               ncol = ncol(y_s),
-               byrow = TRUE)
-      xi_s <- y_s_dm %*% phi
-    }
-
-    rownames(y_s_hat) <- rownames(y_s)
-    clr_model[[i]][['pointwise_pred']] <- y_s_hat
-
-    clr_model[[i]][['epsilon']] <- xi_s - xi_s_hat
-
-    if (ortho_y) {
-      clr_model[[i]][['INV_DELTA']] <- INV_DELTA
-    } else {
-      clr_model[[i]][['phi']] <- phi
-    }
-
-    clr_model[[i]][['xi_s_hat']] <- xi_s_hat
-    clr_model[[i]][['y_s_dm']] <- y_s_dm
-
+    object[[i]]$xi_hat <- xi_hat
+    #clr_model[[i]][['y_dm']] <- y_dm
+    object[[i]]$qx_hat <- ncol(XX)
+    object[[i]]$qy_hat <- ncol(YY)
+    object[[i]]$d_hat <- d_hat
   }
-
-
-
+  class(object) <- 'clr'
+  return(object)
 }
 
 
-# gestion mean: moyenne glissante, prev, online ...
-# possibilité de proposer des fonctions pour construire l'indexation cluster
-#
-#
-#
+# Pour l'instant on teste avec clust = NULL
+

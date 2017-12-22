@@ -26,6 +26,8 @@ inputs.
 \examples{
 library(clr)
 
+Sys.setenv(TZ = 'Europe/London')
+PB OS High Sierra / R
 data(gb_load)
 
 clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
