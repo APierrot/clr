@@ -4,14 +4,29 @@
 \alias{clr}
 \title{Fit a CLR via dimension reduction}
 \usage{
-clr(Y, X, clust, qx_estimation = "pctvar", ortho_Y = TRUE,
-  qy_estimation = "pctvar", d_estimation = "cor", pct = 0.999)
+clr(Y, X, clust = NULL, qx_estimation = list(method = "pctvar", param =
+  0.999), ortho_Y = TRUE, qy_estimation = list(method = "pctvar", param =
+  0.999), d_estimation = list(method = "cor", param = 0.5),
+  keepData = FALSE)
 }
 \arguments{
-\item{pct}{}
+\item{clust}{to obtain (approximately) homogeneous dependence structure
+inside each cluster}
+
+\item{keepData}{}
 }
 \value{
-
+An object of class \code{clr} that can be used to compute predictions.
+This \code{clr} object is a list of lists: one list by cluster of data, each
+list including:
+\item{residuals}{A matrix with the residuals of d_hat simple linear
+regressions.}
+\item{b_hat}{}
+\item{sigma_hat}{}
+\item{xi_hat}{}
+\item{qx_hat}{}
+\item{qy_hat}{}
+\item{d_hat}{}
 }
 \description{
 blabla
@@ -19,18 +34,28 @@ blabla
 \examples{
 library(clr)
 
-Sys.setenv(TZ = 'Europe/London')
-PB between High Sierra and R
-data(gb_load)
+Sys.setenv(TZ = 'Europe/London') # PB between High Sierra and R
+data(gb_load, package = 'clr')
+data()
 
 clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
                     order_by = gb_load$TIMESTAMP,
                     support_grid = 1:48)
 
-# data cleaning: replace zeros with NA
+## data cleaning: replace zeros with NA
 clr_load[rowSums((clr_load == 0) * 1) > 0, ] <- NA
 matplot(t(clr_load), ylab = 'Daily loads', type = 'l')
 
 Y <- clr_load[2:nrow(clr_load), ]
-X <- clr_load[1:(nrow(clr_load)-1), ]
+X <- clr_load[1:(nrow(clr_load) - 1), ]
+
+begin_pred <- which(substr(rownames(Y), 1, 4) == '2016')[1]
+Y_train <- Y[1:(begin_pred - 1), ]
+X_train <- X[1:(begin_pred - 1), ]
+
+## Example without any cluster
+model <- clr(Y = Y_train, X = X_train)
+
+## Example with clusters
+
 }

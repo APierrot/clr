@@ -79,3 +79,29 @@ detect_NA <- function(data) {
 
   return(data)
 }
+
+
+find_id <- function(Y_info, X_info, clusters) {
+
+  nclust <- nrow(clusters)
+  id <- list('vector', nclust)
+
+  Y_info <- data.frame(id = 1:nrow(Y_info),
+                       Y_info)
+  X_info <- data.frame(id = 1:nrow(X_info),
+                       X_info)
+
+  for (i in 1:nclust) {
+    Y <- suppressMessages(dplyr::semi_join(Y_info, clusters[i, ]))
+    X <- suppressMessages(dplyr::semi_join(X_info, clusters[i, ]))
+    YX <- suppressMessages(dplyr::inner_join(Y, X, by = 'id'))
+    id[[i]] <- YX$id
+  }
+
+  return(id)
+
+}
+
+
+
+

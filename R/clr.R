@@ -3,13 +3,15 @@
 #'
 #' blabla
 #'
-#' @param clust
+#' @param clust to obtain (approximately) homogeneous dependence structure
+#' inside each cluster
 #' @param qx_estimation
 #' @param qy_estimation
 #' @param d_estimation
 #' @param ortho_Y
 #' @param Y
 #' @param X
+#' @param keepData
 #'
 #' @return An object of class \code{clr} that can be used to compute predictions.
 #' This \code{clr} object is a list of lists: one list by cluster of data, each
@@ -28,15 +30,15 @@
 #' @examples
 #' library(clr)
 #'
-#' Sys.setenv(TZ = 'Europe/London')
-#' # PB between High Sierra and R
+#' Sys.setenv(TZ = 'Europe/London') # PB between High Sierra and R
 #' data(gb_load)
+#' data(clust_train)
 #'
 #' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
 #'                     order_by = gb_load$TIMESTAMP,
 #'                     support_grid = 1:48)
 #'
-#' # data cleaning: replace zeros with NA
+#' ## data cleaning: replace zeros with NA
 #' clr_load[rowSums((clr_load == 0) * 1) > 0, ] <- NA
 #' matplot(t(clr_load), ylab = 'Daily loads', type = 'l')
 #'
@@ -47,7 +49,11 @@
 #' Y_train <- Y[1:(begin_pred - 1), ]
 #' X_train <- X[1:(begin_pred - 1), ]
 #'
+#' ## Example without any cluster
 #' model <- clr(Y = Y_train, X = X_train)
+#'
+#' ## Example with clusters
+#' model <- clr(Y = Y_train, X = X_train, clust = clust_train)
 
 
 clr <- function(Y, X, clust = NULL,
@@ -57,7 +63,8 @@ clr <- function(Y, X, clust = NULL,
                 qy_estimation = list(method = 'pctvar',
                                      param = 0.999),
                 d_estimation = list(method = 'cor',
-                                    param = 0.5)) {
+                                    param = 0.5),
+                keepData = FALSE) {
 
   # Conditions on data trains
   if (!is.matrix(Y) | !is.matrix(X)) {
@@ -70,13 +77,11 @@ clr <- function(Y, X, clust = NULL,
 
   # option clust
   if (is.null(clust)) {
-    clust_desc <- data.frame(n = nrow(Y))
-    clust_id <- list(1:nrow(Y))
-    names(clust_id[[1]]) <- rownames(Y)
-  } else {
-    clust_desc <- clust$clust_desc
-    clust_id <- clust$clust_id
+    clust <- list(1:nrow(Y))
+    #names(clust[[1]]) <- rownames(Y)
   }
+
+  nclust <- length(clust)
 
   Y_nu <- ncol(Y)
   X_nu <- ncol(X)
@@ -145,19 +150,21 @@ clr <- function(Y, X, clust = NULL,
   }
 
 
-  object <- vector('list', nrow(clust_desc))
+  object <- vector('list', nclust)
 
-  for (i in 1:nrow(clust_desc)) {
+  for (i in 1:nclust) {
 
     # PART I: SVD
-    idx <- clust_id[[i]]
+    idx <- clust[[i]]
     Y_clust <- Y[idx, ]
     X_clust <- X[idx, ]
+
+    # message d'alerte sur le nombre de données dispo ? y compris NA
 
     Y_mean <- colMeans(Y_clust, na.rm = TRUE)
     Y_dm <- Y_clust - matrix(Y_mean,
                              nrow = nrow(Y_clust),
-                             ncol = ncol(Y_clust),
+                             ncol = Y_nu,
                              byrow = TRUE)  # de-meaned Y
 
     X_mean <- colMeans(X_clust, na.rm = TRUE)
@@ -165,10 +172,10 @@ clr <- function(Y, X, clust = NULL,
     # re-scaled X
     X_rs <- (X_clust - matrix(X_mean,
                               nrow = nrow(X_clust),
-                              ncol = ncol(X_clust),
+                              ncol = X_nu,
                               byrow = TRUE)) / matrix(X_sd,
                                                       nrow = nrow(X_clust),
-                                                      ncol = ncol(X_clust),
+                                                      ncol = X_nu,
                                                       byrow = TRUE)
 
     # Orthogonalize X: extract low-dim structure of X_rs
@@ -207,10 +214,8 @@ clr <- function(Y, X, clust = NULL,
       t2 <- svd(var(Y_dm, na.rm = TRUE))
       tau <- t2$d
       qy_hat <- switch(qy_estimation$method,
-                       ratio = which.max(tau[1:(ncol(Y_dm) - 1)] /
-                                           tau[2:ncol(Y_dm)]),
-                       ratioM = max(which(tau[1:(ncol(Y_dm) - 1)] /
-                                            tau[2:ncol(Y_dm)] >
+                       ratio = which.max(tau[1:(Y_nu - 1)] / tau[2:Y_nu]),
+                       ratioM = max(which(tau[1:(Y_nu - 1)] / tau[2:Y_nu] >
                                             qy_estimation$param)),
                        pctvar = {
                          k <- 1
@@ -264,7 +269,7 @@ clr <- function(Y, X, clust = NULL,
     xi <- YY %*% phi
     eta <- XX %*% psi
 
-    # Transformation matrices for Y and X, to be used for prediction
+    # Transformation matrices for Y, to be used for prediction
     if (ortho_Y) {
       DELTA <- DELTA %*% phi
       if (qy_hat > 1) {
@@ -292,21 +297,35 @@ clr <- function(Y, X, clust = NULL,
     object[[i]]$b_hat <- b_hat
     object[[i]]$sigma_hat <- sigma_hat
 
-    xi_hat <- eta[, 1:d_hat] * matrix(b_hat,
-                                      nrow = nrow(eta),
-                                      ncol = d_hat,
-                                      byrow = TRUE)
-
-    object[[i]]$xi_hat <- xi_hat
-    #clr_model[[i]][['y_dm']] <- y_dm
+    object[[i]]$eta <- eta
     object[[i]]$qx_hat <- ncol(XX)
     object[[i]]$qy_hat <- ncol(YY)
     object[[i]]$d_hat <- d_hat
+
+    object[[i]]$X_mean <- X_mean
+    object[[i]]$X_sd <- X_sd
+    object[[i]]$Y_mean <- Y_mean
+
+    object[[i]]$ortho_Y <- ortho_Y
+    object[[i]]$GAMMA <- GAMMA
+    if (ortho_Y) {
+      object[[i]]$INV_DELTA <- INV_DELTA
+    } else {
+      object[[i]]$phi <- phi
+    }
+
+    if (keepData) {
+      object[[i]]$X <- X_clust
+      object[[i]]$Y <- Y_clust
+    }
+
   }
+
   class(object) <- 'clr'
   return(object)
 }
 
 
 # Pour l'instant on teste avec clust = NULL
+# modifier avec nouveau clust
 

@@ -5,6 +5,9 @@ library(dplyr)
 # DIRECTORY
 data_dir <- file.path('/Users', 'amandinepierrot', 'Documents', 'donnees', 'UK')
 
+# FUNCTIONS
+source(file.path('data-raw', 'trick-functions.R'))
+
 
 # LOAD DATA --------------------------------------------------------------------
 
@@ -25,9 +28,6 @@ gb_load <- read.csv(file.path(data_dir, 'DemandData_2011-2016.csv'), sep = ',') 
 
 
 # WEATHER DATA -----------------------------------------------------------------
-
-# FUNCTIONS
-source(file.path('data-raw', 'trick-functions.R'))
 
 # IMPORT
 gb_weather <- read.table(file.path(data_dir, 'meteo', '29657358679dat.txt'),
@@ -104,7 +104,50 @@ rm(bank_hol)
 
 save(gb_load, file = file.path('data', 'gb_load.RData'))
 
-# penser à invalider jours avec valeurs négatives à un moment
-# refaire jeu de données, erreur maintenant ??
 
+
+# CLUSTERS ---------------------------------------------------------------------
+cluster_data <- gb_load %>%
+  select(SETTLEMENT_DATE, DAY_TYPE) %>%
+  mutate(MONTH = month(SETTLEMENT_DATE),
+         season_clust = ifelse(MONTH %in% c(1:3, 11:12), 1, 2)) %>%
+  select(-MONTH) %>%
+  distinct()
+
+Y_info <- cluster_data[2:nrow(cluster_data), ] %>%
+  select(-SETTLEMENT_DATE) %>%
+  rename(Y_dt = DAY_TYPE,
+         Y_sc = season_clust)
+X_info <- cluster_data[1:(nrow(cluster_data) - 1), ] %>%
+  select(-SETTLEMENT_DATE) %>%
+  rename(X_dt = DAY_TYPE,
+         X_sc = season_clust)
+
+clusters <- cbind(Y_info, X_info) %>%
+  distinct() %>%
+  filter(Y_dt != 8,
+         X_dt != 8)
+clusters <- data.frame(clust = 1:nrow(clusters),
+                       clusters)
+
+begin_pred <- which(cluster_data[2:nrow(cluster_data), 'SETTLEMENT_DATE'] ==
+                      '2016-01-01')
+
+# clusters on train data
+clust_train <- find_id(Y_info = Y_info[1:(begin_pred - 1), ],
+                       X_info = X_info[1:(begin_pred - 1), ],
+                       clusters = clusters)
+n_byclust <- sapply(clust_train, length)
+clust_train <- clust_train[n_byclust > 5]
+
+save(clust_train, file = file.path('data', 'clust_train.RData'))
+
+
+# clusters on test data
+clust_test <- find_id(Y_info = Y_info[begin_pred:nrow(Y_info), ],
+                       X_info = X_info[begin_pred:nrow(X_info), ],
+                       clusters = clusters)
+clust_test <- clust_test[n_byclust > 5]
+
+save(clust_test, file = file.path('data', 'clust_test.RData'))
 

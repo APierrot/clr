@@ -3,99 +3,170 @@
 #'
 #' @param object
 #' @param ...
+#' @param newX
+#' @param clust
+#' @param newXmean
 #'
 #' @return
 #' @export
 #'
 #' @examples
+#' library(clr)
 #'
+#' Sys.setenv(TZ = 'Europe/London')
+#' # PB between High Sierra and R
+#' data(gb_load)
+#'
+#' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
+#'                     order_by = gb_load$TIMESTAMP,
+#'                     support_grid = 1:48)
+#'
+#' # data cleaning: replace zeros with NA
+#' clr_load[rowSums((clr_load == 0) * 1) > 0, ] <- NA
+#'
+#' Y <- clr_load[2:nrow(clr_load), ]
+#' X <- clr_load[1:(nrow(clr_load) - 1), ]
+#'
+#' begin_pred <- which(substr(rownames(Y), 1, 4) == '2016')[1]
+#' Y_train <- Y[1:(begin_pred - 1), ]
+#' X_train <- X[1:(begin_pred - 1), ]
+#'
+#' model <- clr(Y = Y_train, X = X_train)
+#'
+#' pred_on_train <- predict.clr(model)
+#' head(pred_on_train[[1]])
+#'
+#' X_test <- X[begin_pred:nrow(X), ]
+#' pred_on_test <- predict.clr(model, newX = X_test)
+#' head(pred_on_test[[1]])
 
 
-predict.clr <- function(object, ...) {
+predict.clr <- function(object, newX = NULL, clust = NULL,
+                        newXmean = NULL, ...) {
 
-}
+  nclust <- length(object)
 
-
-
-# PART III: CALCULATE PREDICTION
-# trend pb: y_mean (in-sample), much higher than y_s_mean (out-sample)
-
-# y_s (y to predict)
-y_s <- y[id_s:nrow(y), , drop = FALSE]
-x_s <- x[id_s:nrow(x), , drop = FALSE]
-
-y_mean_s <- y_mean
-x_mean_s <- x_mean
-
-if (corr_mean) {
-  # with out-sample mean
-  y_mean_s <- colMeans(y_s, na.rm = TRUE)
-  x_mean_s <- colMeans(x_s, na.rm = TRUE)
-}
-
-y_s_dm <- y_s - matrix(y_mean_s,
-                       nrow = nrow(y_s),
-                       ncol = ncol(y_s),
-                       byrow = TRUE)
-x_s_rs <- (x_s - matrix(x_mean_s,
-                        nrow = nrow(x_s),
-                        ncol = ncol(x_s),
-                        byrow = TRUE)) / matrix(x_sd,
-                                                nrow = nrow(x_s),
-                                                ncol = ncol(x_s),
-                                                byrow = TRUE)
-
-if (ortho_x) {
-
-  eta_s <- x_s_rs %*% GAMMA
-  xi_s_hat <- eta_s * matrix(b_hat,
-                             nrow = nrow(eta_s),
-                             ncol = ncol(eta_s),
-                             byrow = TRUE)
-  if (ortho_y) {
-    y_s_hat <- (xi_s_hat[, 1:d_hat, drop = FALSE] %*% INV_DELTA[1:d_hat, , drop = FALSE]) +
-      matrix(y_mean_s,
-             nrow = nrow(y_s),
-             ncol = ncol(y_s),
-             byrow = TRUE)
-    xi_s <- y_s_dm %*% DELTA
-  } else {
-    y_s_hat <- xi_s_hat[, 1:d_hat, drop = FALSE] %*% t(phi[, 1:d_hat, drop = FALSE]) +
-      matrix(y_mean_s,
-             nrow = nrow(y_s),
-             ncol = ncol(y_s),
-             byrow = TRUE)
-    xi_s <- y_s_dm %*% phi
+  if (!is.null(newX)) {
+    X <- newX
+    nclust <- length(object)
+    if (is.null(clust)) {
+      if (nclust != 1) {
+        stop ('Need clusters in clust for newX')
+      } else {
+        clust_desc <- data.frame(n = nrow(X))
+        clust_id <- list(1:nrow(X))
+      }
+    } else {
+      clust_desc <- clust$clust_desc
+      clust_id <- clust$clust_id
+    }
   }
 
-} else {
-  eta_s <- x_s_rs %*% psi
-  xi_s_hat <- eta_s[, 1:kj, drop = FALSE] %*% t(b_hat)
-  y_s_hat <- xi_s_hat[, 1:d_hat, drop = FALSE] %*% t(phi[, 1:d_hat, drop = FALSE]) +
-    matrix(y_mean_s,
-           nrow = nrow(y_s),
-           ncol = ncol(y_s),
-           byrow = TRUE)
-  xi_s <- y_s_dm %*% phi
+
+  predictions <- vector('list', nclust)
+
+  for (i in 1:nclust) {
+
+    if (is.null(newX)) {
+
+      ortho_Y <- object[[i]]$ortho_Y
+      d_hat <- object[[i]]$d_hat
+      b_hat <- object[[i]]$b_hat
+      if (ortho_Y) {
+        INV_DELTA <- object[[i]]$INV_DELTA
+      } else {
+        phi <- object[[i]]$phi
+      }
+      Y_mean <- object[[i]]$Y_mean
+      Y_nu <- length(Y_mean)
+      eta <- object[[i]]$eta
+
+      xi_hat <- eta[, 1:d_hat] * matrix(b_hat,
+                                        nrow = nrow(eta),
+                                        ncol = d_hat,
+                                        byrow = TRUE)
+
+      if (ortho_Y) {
+        Y_hat <- xi_hat[, 1:d_hat, drop = FALSE] %*%
+          INV_DELTA[1:d_hat, , drop = FALSE] +
+          matrix(Y_mean,
+                 nrow = nrow(xi_hat),
+                 ncol = Y_nu,
+                 byrow = TRUE)
+      } else {
+        Y_hat <- xi_hat[, 1:d_hat, drop = FALSE] %*%
+          t(phi[, 1:d_hat, drop = FALSE]) +
+          matrix(Y_mean,
+                 nrow = nrow(xi_hat),
+                 ncol = Y_nu,
+                 byrow = TRUE)
+      }
+
+      row.names(Y_hat) <- NULL
+      predictions[[i]] <- Y_hat
+
+    } else {
+
+      idx <- clust_id[[i]]
+      X_clust <- X[idx, ]
+
+      X_mean <- object[[i]]$X_mean
+      X_sd <- object[[i]]$X_sd
+      Y_mean <- object[[i]]$Y_mean
+      GAMMA <- object[[i]]$GAMMA
+      ortho_Y <- object[[i]]$ortho_Y
+      if (ortho_Y) {
+        INV_DELTA <- object[[i]]$INV_DELTA
+      } else {
+        phi <- object[[i]]$phi
+      }
+      b_hat <- object[[i]]$b_hat
+      d_hat <- object[[i]]$d_hat
+      X_nu <- ncol(X_clust)
+      Y_nu <- length(Y_mean)
+
+      X_rs <- (X_clust - matrix(X_mean,
+                                nrow = nrow(X_clust),
+                                ncol = X_nu,
+                                byrow = TRUE)) / matrix(X_sd,
+                                                        nrow = nrow(X_clust),
+                                                        ncol = X_nu,
+                                                        byrow = TRUE)
+
+      eta <- X_rs %*% GAMMA
+      xi_hat <- eta[, 1:d_hat] * matrix(b_hat,
+                                        nrow = nrow(eta),
+                                        ncol = d_hat,
+                                        byrow = TRUE)
+
+      if (ortho_Y) {
+        Y_hat <- xi_hat[, 1:d_hat, drop = FALSE] %*%
+          INV_DELTA[1:d_hat, , drop = FALSE] +
+          matrix(Y_mean,
+                 nrow = nrow(xi_hat),
+                 ncol = Y_nu,
+                 byrow = TRUE)
+      } else {
+        Y_hat <- xi_hat[, 1:d_hat, drop = FALSE] %*%
+          t(phi[, 1:d_hat, drop = FALSE]) +
+          matrix(Y_mean,
+                 nrow = nrow(xi_hat),
+                 ncol = Y_nu,
+                 byrow = TRUE)
+      }
+
+      row.names(Y_hat) <- NULL
+      predictions[[i]] <- Y_hat
+      # comment gérer les dates ? via clust ?
+
+    }
+
+  }
+
+  return(predictions)
+
 }
 
-rownames(y_s_hat) <- rownames(y_s)
-clr_model[[i]][['pointwise_pred']] <- y_s_hat
 
-clr_model[[i]][['epsilon']] <- xi_s - xi_s_hat
-
-if (ortho_y) {
-  clr_model[[i]][['INV_DELTA']] <- INV_DELTA
-} else {
-  clr_model[[i]][['phi']] <- phi
-}
-
-clr_model[[i]][['xi_s_hat']] <- xi_s_hat
-clr_model[[i]][['y_s_dm']] <- y_s_dm
-
-
-# gestion mean: moyenne glissante, prev, online ...
-# possibilité de proposer des fonctions pour construire l'indexation cluster
-#
-#
+# how to manage newMean: moyenne glissante, prev, online ...
 
