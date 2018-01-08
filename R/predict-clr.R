@@ -4,6 +4,7 @@
 #' @param object
 #' @param newX
 #' @param newXmean
+#' @param simplify
 #' @param newclust
 #'
 #' @return
@@ -29,6 +30,7 @@
 #' begin_pred <- which(substr(rownames(Y), 1, 4) == '2016')[1]
 #' Y_train <- Y[1:(begin_pred - 1), ]
 #' X_train <- X[1:(begin_pred - 1), ]
+#' Y_test <- Y[begin_pred:nrow(Y), ]
 #' X_test <- X[begin_pred:nrow(X), ]
 #'
 #'
@@ -36,23 +38,30 @@
 #' model <- clr(Y = Y_train, X = X_train)
 #'
 #' pred_on_train <- predict(model)
-#' head(pred_on_train[[1]])
+#' head(pred_on_train)
 #'
 #' pred_on_test <- predict(model, newX = X_test)
-#' head(pred_on_test[[1]])
+#' head(pred_on_test)
 #'
 #'
 #' ## Example with clusters
 #' model <- clr(Y = Y_train, X = X_train, clust = clust_train)
 #'
-#' pred_on_train <- predict(model)
+#' pred_on_train <- predict(model, simplify = FALSE)
+#' str(pred_on_train)
+#' head(pred_on_train[[1]])
+#'
 #' pred_on_test <- predict(model, newX = X_test, newclust = clust_test)
-#' head(pred_on_test[[1]])
+#' str(pred_on_test)
+#' head(pred_on_test)
+#'
+#' # With dates as row names
+#' row.names(pred_on_test) <- row.names(Y_test)
 
 
 
 predict.clr <- function(object, newX = NULL, newclust = NULL,
-                        newXmean = NULL) {
+                        newXmean = NULL, simplify = TRUE) {
 
   nclust <- length(object)
 
@@ -171,16 +180,15 @@ predict.clr <- function(object, newX = NULL, newclust = NULL,
 
       row.names(Y_hat) <- idx
       predictions[[i]] <- Y_hat
-      # comment gérer les dates ? via clust ?
-      # remettre dans l'ordre
-      # garder les row.names ?
-
     }
 
   }
 
+  if (simplify) {
+    predictions <- do.call(rbind, predictions)
+    predictions <- predictions[order(as.numeric(row.names(predictions))), ]
+  }
   return(predictions)
-
 }
 
 
