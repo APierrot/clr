@@ -4,11 +4,11 @@
 \alias{predict.clr}
 \title{Model predictions with Curve Linear Regression}
 \usage{
-\method{predict}{clr}(object, newX = NULL, clust = NULL, newXmean = NULL,
-  ...)
+\method{predict}{clr}(object, newX = NULL, newclust = NULL,
+  newXmean = NULL)
 }
 \arguments{
-\item{newXmean}{}
+\item{newclust}{}
 }
 \description{
 Model predictions with Curve Linear Regression
@@ -33,13 +33,23 @@ X <- clr_load[1:(nrow(clr_load) - 1), ]
 begin_pred <- which(substr(rownames(Y), 1, 4) == '2016')[1]
 Y_train <- Y[1:(begin_pred - 1), ]
 X_train <- X[1:(begin_pred - 1), ]
+X_test <- X[begin_pred:nrow(X), ]
 
+
+## Example without any cluster
 model <- clr(Y = Y_train, X = X_train)
 
-pred_on_train <- predict.clr(model)
+pred_on_train <- predict(model)
 head(pred_on_train[[1]])
 
-X_test <- X[begin_pred:nrow(X), ]
-pred_on_test <- predict.clr(model, newX = X_test)
+pred_on_test <- predict(model, newX = X_test)
+head(pred_on_test[[1]])
+
+
+## Example with clusters
+model <- clr(Y = Y_train, X = X_train, clust = clust_train)
+
+pred_on_train <- predict(model)
+pred_on_test <- predict(model, newX = X_test, newclust = clust_test)
 head(pred_on_test[[1]])
 }

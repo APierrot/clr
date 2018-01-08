@@ -35,8 +35,8 @@ blabla
 library(clr)
 
 Sys.setenv(TZ = 'Europe/London') # PB between High Sierra and R
-data(gb_load, package = 'clr')
-data()
+data(gb_load)
+data(clust_train)
 
 clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
                     order_by = gb_load$TIMESTAMP,
@@ -57,5 +57,5 @@ X_train <- X[1:(begin_pred - 1), ]
 model <- clr(Y = Y_train, X = X_train)
 
 ## Example with clusters
-
+model <- clr(Y = Y_train, X = X_train, clust = clust_train)
 }

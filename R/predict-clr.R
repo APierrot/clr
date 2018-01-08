@@ -2,10 +2,9 @@
 #' Model predictions with Curve Linear Regression
 #'
 #' @param object
-#' @param ...
 #' @param newX
-#' @param clust
 #' @param newXmean
+#' @param newclust
 #'
 #' @return
 #' @export
@@ -30,38 +29,48 @@
 #' begin_pred <- which(substr(rownames(Y), 1, 4) == '2016')[1]
 #' Y_train <- Y[1:(begin_pred - 1), ]
 #' X_train <- X[1:(begin_pred - 1), ]
+#' X_test <- X[begin_pred:nrow(X), ]
 #'
+#'
+#' ## Example without any cluster
 #' model <- clr(Y = Y_train, X = X_train)
 #'
-#' pred_on_train <- predict.clr(model)
+#' pred_on_train <- predict(model)
 #' head(pred_on_train[[1]])
 #'
-#' X_test <- X[begin_pred:nrow(X), ]
-#' pred_on_test <- predict.clr(model, newX = X_test)
+#' pred_on_test <- predict(model, newX = X_test)
+#' head(pred_on_test[[1]])
+#'
+#'
+#' ## Example with clusters
+#' model <- clr(Y = Y_train, X = X_train, clust = clust_train)
+#'
+#' pred_on_train <- predict(model)
+#' pred_on_test <- predict(model, newX = X_test, newclust = clust_test)
 #' head(pred_on_test[[1]])
 
 
-predict.clr <- function(object, newX = NULL, clust = NULL,
-                        newXmean = NULL, ...) {
+
+predict.clr <- function(object, newX = NULL, newclust = NULL,
+                        newXmean = NULL) {
 
   nclust <- length(object)
 
   if (!is.null(newX)) {
     X <- newX
-    nclust <- length(object)
-    if (is.null(clust)) {
+    if (is.null(newclust)) {
       if (nclust != 1) {
-        stop ('Need clusters in clust for newX')
+        stop ('Need clusters in newClust for newX')
       } else {
-        clust_desc <- data.frame(n = nrow(X))
-        clust_id <- list(1:nrow(X))
+        newclust <- list(1:nrow(newX))
       }
     } else {
-      clust_desc <- clust$clust_desc
-      clust_id <- clust$clust_id
+      if (length(newclust) != nclust) {
+        stop(paste0('The number of clusters in newclust should be te same as in',
+                    ' the clr object'))
+      }
     }
   }
-
 
   predictions <- vector('list', nclust)
 
@@ -102,12 +111,17 @@ predict.clr <- function(object, newX = NULL, clust = NULL,
                  byrow = TRUE)
       }
 
-      row.names(Y_hat) <- NULL
+      row.names(Y_hat) <- object[[i]]$idx
       predictions[[i]] <- Y_hat
 
     } else {
 
-      idx <- clust_id[[i]]
+      if (is.null(newclust)) {
+        idx <- object[[i]]$idx
+      } else {
+        idx <- newclust[[i]]
+      }
+
       X_clust <- X[idx, ]
 
       X_mean <- object[[i]]$X_mean
@@ -155,9 +169,11 @@ predict.clr <- function(object, newX = NULL, clust = NULL,
                  byrow = TRUE)
       }
 
-      row.names(Y_hat) <- NULL
+      row.names(Y_hat) <- idx
       predictions[[i]] <- Y_hat
       # comment gérer les dates ? via clust ?
+      # remettre dans l'ordre
+      # garder les row.names ?
 
     }
 

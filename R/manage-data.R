@@ -94,7 +94,7 @@ clrdata <- function(x, order_by, support_grid) {
 
   if (n > nrow(df)) {
     message('Rows with less or more than ', nu,
-            ' values were replaced with NA')
+            ' values have been replaced with NA')
   }
 
   return(clrmat)

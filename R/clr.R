@@ -314,6 +314,8 @@ clr <- function(Y, X, clust = NULL,
       object[[i]]$phi <- phi
     }
 
+    object[[i]]$idx <- idx
+
     if (keepData) {
       object[[i]]$X <- X_clust
       object[[i]]$Y <- Y_clust
@@ -325,7 +327,5 @@ clr <- function(Y, X, clust = NULL,
   return(object)
 }
 
-
-# Pour l'instant on teste avec clust = NULL
-# modifier avec nouveau clust
+# faire une fonction summary ?
 
