@@ -5,10 +5,10 @@
 #' \code{clrdata} is used to create a \code{clrdata} object from raw data
 #' inputs.
 #'
-#' @param x a vector containing the time series values
-#' @param order_by a corresponding vector of unique time-dates - must be of
+#' @param x A vector containing the time series values
+#' @param order_by A corresponding vector of unique time-dates - must be of
 #' class 'POSIXct'
-#' @param support_grid a vector corresponding to the support grid of functional
+#' @param support_grid A vector corresponding to the support grid of functional
 #' data
 #'
 #' @return An object of class \code{clrdata} with one function a row. As it

@@ -1,5 +1,5 @@
 
-#' Fit a CLR via dimension reduction
+#' Curve Linear Regression via dimension reduction
 #'
 #' blabla
 #'

@@ -1,11 +1,22 @@
 
-#' Model predictions with Curve Linear Regression
+#' Prediction from fitted CLR model(s)
 #'
-#' @param object
-#' @param newX
-#' @param newXmean
-#' @param simplify
-#' @param newclust
+#' Takes a fitted \code{clr} object produced by \code{clr()} and produces
+#' predictions given a new set of functions or the original values used for
+#' the model fit.
+#'
+#' @param object A fitted \code{clr} object produced by \code{clr()}.
+#' @param newX An object of class \code{clrdata} or a matrix with one function a
+#' row. If this is not provided then predictions corresponding to the original
+#' data are returned. If \code{newX} is provided then it should contain the
+#' same type of functions as the original ones (same dimension, same clusters
+#' eventually, ...).
+#' @param newclust A new list of id to obtain (approximately) homogeneous
+#' dependence structure inside each cluster of functions.
+#' @param newXmean To complete when done
+#' @param simplify If TRUE, one matrix of predicted functions is returned
+#' instead of a list of matrices (one matrix by cluster). In the final matrix,
+#' rows are sorted by increasing row numbers.
 #'
 #' @return
 #' @export
@@ -38,20 +49,21 @@
 #' model <- clr(Y = Y_train, X = X_train)
 #'
 #' pred_on_train <- predict(model)
-#' head(pred_on_train)
+#' head(pred_on_train[[1]])
 #'
 #' pred_on_test <- predict(model, newX = X_test)
-#' head(pred_on_test)
+#' head(pred_on_test[[1]])
 #'
 #'
 #' ## Example with clusters
 #' model <- clr(Y = Y_train, X = X_train, clust = clust_train)
 #'
-#' pred_on_train <- predict(model, simplify = FALSE)
+#' pred_on_train <- predict(model)
 #' str(pred_on_train)
 #' head(pred_on_train[[1]])
 #'
-#' pred_on_test <- predict(model, newX = X_test, newclust = clust_test)
+#' pred_on_test <- predict(model, newX = X_test, newclust = clust_test,
+#'                         simplify = TRUE)
 #' str(pred_on_test)
 #' head(pred_on_test)
 #'
@@ -61,22 +73,26 @@
 
 
 predict.clr <- function(object, newX = NULL, newclust = NULL,
-                        newXmean = NULL, simplify = TRUE) {
+                        newXmean = NULL, simplify = FALSE) {
 
   nclust <- length(object)
 
   if (!is.null(newX)) {
+    if (ncol(newX) != length(object[[1]]$X_mean)) {
+      stop(paste0('Functions in newX should have the same dimension as the ',
+                  'original ones'))
+    }
     X <- newX
     if (is.null(newclust)) {
       if (nclust != 1) {
-        stop ('Need clusters in newClust for newX')
+        stop('Need clusters in newclust for newX')
       } else {
         newclust <- list(1:nrow(newX))
       }
     } else {
       if (length(newclust) != nclust) {
-        stop(paste0('The number of clusters in newclust should be te same as in',
-                    ' the clr object'))
+        stop(paste0('The number of clusters in newclust should be the same as',
+                    ' in the clr object'))
       }
     }
   }
