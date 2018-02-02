@@ -18,7 +18,8 @@
 #' instead of a list of matrices (one matrix by cluster). In the final matrix,
 #' rows are sorted by increasing row numbers.
 #'
-#' @return
+#' @return predicted functions
+#'
 #' @export
 #'
 #' @examples
@@ -208,5 +209,5 @@ predict.clr <- function(object, newX = NULL, newclust = NULL,
 }
 
 
-# how to manage newMean: moyenne glissante, prev, online ...
+# work on newMean: moyenne glissante, prev, online ...
 

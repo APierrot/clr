@@ -3,29 +3,47 @@
 #'
 #' blabla
 #'
-#' @param clust to obtain (approximately) homogeneous dependence structure
-#' inside each cluster
-#' @param qx_estimation
-#' @param qy_estimation
-#' @param d_estimation
-#' @param ortho_Y
-#' @param Y
-#' @param X
-#' @param keepData
+#' @param Y An object of class \code{clrdata} or \code{matrix}, of the response
+#' curves (one curve a row).
+#' @param X An object of class \code{clrdata} or \code{matrix}, of the regressor
+#' curves (one curve a row).
+#' @param clust If needed, a list of row indices for each cluster, to obtain
+#' (approximately) homogeneous dependence structure inside each cluster.
+#' @param qx_estimation A list containing both values for 'method' (among
+#' 'ratio', 'ratioM', 'pctvar', 'fixed') and for 'param' (depending on the
+#' selected method), in order to choose how to estimate the dimension of X (in
+#' the sense that its Karhunen-Lo\`{e}ve decomposition has qx terms only.
+#' @param ortho_Y If TRUE then Y is orthogonalized.
+#' @param qy_estimation Same as for qx_estimation, if ortho_Y is set to TRUE.
+#' @param d_estimation A list containing both values for 'method' (among
+#' 'ratio', 'pctvar', 'cor') and for 'param' (depending on the
+#' selected method), in order to choose how to estimate the correlation
+#' dimension.
 #'
-#' @return An object of class \code{clr} that can be used to compute predictions.
+#' @return An object of class \code{clr}, which can be used to compute
+#' predictions.
 #' This \code{clr} object is a list of lists: one list by cluster of data, each
 #' list including:
 #' \item{residuals}{A matrix with the residuals of d_hat simple linear
 #' regressions.}
-#' \item{b_hat}{}
-#' \item{sigma_hat}{}
-#' \item{xi_hat}{}
-#' \item{qx_hat}{}
-#' \item{qy_hat}{}
-#' \item{d_hat}{}
+#' \item{b_hat}{A vector with the estimated coefficient of the d_hat simple
+#' straight line regressions.}
+#' \item{eta}
+#' \item{qx_hat}
+#' \item{qy_hat}
+#' \item{d_hat}
+#' \item{X_mean}
+#' \item{X_sd}
+#' \item{Y_mean}
+#' \item{ortho_Y}
+#' \item{GAMMA}
+#' \item{INV_DELTA}
+#' \item{phi}
+#' \item{idx}
+#' \item{X}
+#' \item{Y}
 #'
-#' @export clr
+#' @export
 #'
 #' @examples
 #' library(clr)
@@ -289,13 +307,11 @@ clr <- function(Y, X, clust = NULL,
     for (j in 1:d_hat) {
       t1 <- lm(xi[, j] ~ eta[, j] - 1)
       b_hat[j] <- t1$coefficients          # Estimated slope of j-th regression
-      sigma_hat[j] <- (summary(t1)$sigma)  # STD of residuals for j-th regression
       res[, j] <- t1$residuals             # Residuals of j-th regression
     }
 
     object[[i]]$residuals <- res
     object[[i]]$b_hat <- b_hat
-    object[[i]]$sigma_hat <- sigma_hat
 
     object[[i]]$eta <- eta
     object[[i]]$qx_hat <- ncol(XX)
@@ -315,11 +331,8 @@ clr <- function(Y, X, clust = NULL,
     }
 
     object[[i]]$idx <- idx
-
-    if (keepData) {
-      object[[i]]$X <- X_clust
-      object[[i]]$Y <- Y_clust
-    }
+    object[[i]]$X <- X_clust
+    object[[i]]$Y <- Y_clust
 
   }
 
