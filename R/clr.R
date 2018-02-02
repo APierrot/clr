@@ -24,18 +24,19 @@
 #' predictions.
 #' This \code{clr} object is a list of lists: one list by cluster of data, each
 #' list including:
-#' \item{residuals}{A matrix with the residuals of d_hat simple linear
+#' \item{residuals}{A matrix of the residuals of d_hat simple linear
 #' regressions.}
-#' \item{b_hat}{A vector with the estimated coefficient of the d_hat simple
+#' \item{b_hat}{A vector of the estimated coefficient of the d_hat simple
 #' straight line regressions.}
-#' \item{eta}
-#' \item{qx_hat}
-#' \item{qy_hat}
-#' \item{d_hat}
-#' \item{X_mean}
-#' \item{X_sd}
-#' \item{Y_mean}
-#' \item{ortho_Y}
+#' \item{eta}{A matrix of the projections of X.}
+#' \item{xi}{A matrix of the projections of Y.}
+#' \item{qx_hat}{The estimated dimension of X.}
+#' \item{qy_hat}{The estimated dimension of Y.}
+#' \item{d_hat}{The estimated correlation dimension.}
+#' \item{X_mean}{The mean of the regressor curves.}
+#' \item{X_sd}{The standard deviation of the regressor curves.}
+#' \item{Y_mean}{The mean of the response curves.}
+#' \item{ortho_Y}{The value which was selected for ortho_Y.}
 #' \item{GAMMA}
 #' \item{INV_DELTA}
 #' \item{phi}
@@ -302,7 +303,6 @@ clr <- function(Y, X, clust = NULL,
     lm_rows <- sum(!is.na(rowSums(cbind(xi, eta))))
 
     b_hat <- vector(length = d_hat)
-    sigma_hat <- vector(length = d_hat)
     res <- matrix(nrow = lm_rows, ncol = d_hat)
     for (j in 1:d_hat) {
       t1 <- lm(xi[, j] ~ eta[, j] - 1)
@@ -314,6 +314,8 @@ clr <- function(Y, X, clust = NULL,
     object[[i]]$b_hat <- b_hat
 
     object[[i]]$eta <- eta
+    object[[i]]$xi <- xi
+
     object[[i]]$qx_hat <- ncol(XX)
     object[[i]]$qy_hat <- ncol(YY)
     object[[i]]$d_hat <- d_hat
