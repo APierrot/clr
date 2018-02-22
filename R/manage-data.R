@@ -1,6 +1,5 @@
 
-
-#' Create an object of class clrdata
+#' Create an object of \code{clrdata}
 #'
 #' \code{clrdata} is used to create a \code{clrdata} object from raw data
 #' inputs.
@@ -16,20 +15,16 @@
 #' @import magrittr dplyr
 #' @importFrom lubridate is.POSIXct date
 #'
-#' @export clrdata
+#' @export
 #'
 #' @examples
 #' library(clr)
-#'
-#' Sys.setenv(TZ = 'Europe/London')
-#' PB OS High Sierra / R
 #' data(gb_load)
 #'
 #' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
 #'                     order_by = gb_load$TIMESTAMP,
 #'                     support_grid = 1:48)
 #'
-#' View(clr_load)
 #' head(clr_load)
 #' dim(clr_load)
 #' summary(clr_load)
@@ -61,6 +56,8 @@ clrdata <- function(x, order_by, support_grid) {
   df <- data.frame(order_by, x)
   nu <- length(support_grid)
   n <- nrow(df)
+
+  n_instants <- NULL
 
   df <- df %>%
     dplyr::mutate(date = lubridate::date(order_by)) %>%

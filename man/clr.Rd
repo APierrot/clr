@@ -2,39 +2,67 @@
 % Please edit documentation in R/clr.R
 \name{clr}
 \alias{clr}
-\title{Fit a CLR via dimension reduction}
+\title{Curve Linear Regression via dimension reduction}
 \usage{
 clr(Y, X, clust = NULL, qx_estimation = list(method = "pctvar", param =
   0.999), ortho_Y = TRUE, qy_estimation = list(method = "pctvar", param =
-  0.999), d_estimation = list(method = "cor", param = 0.5),
-  keepData = FALSE)
+  0.999), d_estimation = list(method = "cor", param = 0.5))
 }
 \arguments{
-\item{clust}{to obtain (approximately) homogeneous dependence structure
-inside each cluster}
+\item{Y}{An object of class \code{clrdata} or \code{matrix}, of the response
+curves (one curve a row).}
 
-\item{keepData}{}
+\item{X}{An object of class \code{clrdata} or \code{matrix}, of the regressor
+curves (one curve a row).}
+
+\item{clust}{If needed, a list of row indices for each cluster, to obtain
+(approximately) homogeneous dependence structure inside each cluster.}
+
+\item{qx_estimation}{A list containing both values for 'method' (among
+'ratio', 'ratioM', 'pctvar', 'fixed') and for 'param' (depending on the
+selected method), in order to choose how to estimate the dimension of X (in
+the sense that its Karhunen-Lo\`{e}ve decomposition has qx terms only.}
+
+\item{ortho_Y}{If TRUE then Y is orthogonalized.}
+
+\item{qy_estimation}{Same as for qx_estimation, if ortho_Y is set to TRUE.}
+
+\item{d_estimation}{A list containing both values for 'method' (among
+'ratio', 'pctvar', 'cor') and for 'param' (depending on the
+selected method), in order to choose how to estimate the correlation
+dimension.}
 }
 \value{
-An object of class \code{clr} that can be used to compute predictions.
+An object of class \code{clr}, which can be used to compute
+predictions.
 This \code{clr} object is a list of lists: one list by cluster of data, each
 list including:
-\item{residuals}{A matrix with the residuals of d_hat simple linear
+\item{residuals}{The matrix of the residuals of d_hat simple linear
 regressions.}
-\item{b_hat}{}
-\item{sigma_hat}{}
-\item{xi_hat}{}
-\item{qx_hat}{}
-\item{qy_hat}{}
-\item{d_hat}{}
+\item{b_hat}{The vector of the estimated coefficient of the d_hat simple
+straight line regressions.}
+\item{eta}{The matrix of the projections of X.}
+\item{xi}{The matrix of the projections of Y.}
+\item{qx_hat}{The estimated dimension of X.}
+\item{qy_hat}{The estimated dimension of Y.}
+\item{d_hat}{The estimated correlation dimension.}
+\item{X_mean}{The mean of the regressor curves.}
+\item{X_sd}{The standard deviation of the regressor curves.}
+\item{Y_mean}{The mean of the response curves.}
+\item{ortho_Y}{The value which was selected for ortho_Y.}
+\item{GAMMA}{The standardized transformation for X.}
+\item{INV_DELTA}{The standardized transformation for Y to predict if ortho_Y
+was set to TRUE.}
+\item{phi}{The eigenvectors for Y to predict if ortho_Y was set to FALSE.}
+\item{idx}{The indices of the rows selected from X and Y for the current
+cluster.}
 }
 \description{
-blabla
+Fits a curve linear regression (CLR) model to data, using dimension
+reduction based on singular value decomposition.
 }
 \examples{
 library(clr)
-
-Sys.setenv(TZ = 'Europe/London') # PB between High Sierra and R
 data(gb_load)
 data(clust_train)
 

@@ -12,11 +12,11 @@
 #' linear and can be captured by simple regression models.
 #'
 #' @name clr-package
-#' @aliases clr-package clr
+#' @aliases clr-package
 #' @docType package
-#' @author Amandine Pierrot <amandine.m.pierrot@gmail.com>
+#' @author Amandine Pierrot <amandine.m.pierrot@@gmail.com>
 #'
-#' with contributions and/or help from Qiwei Yao, Haeran Cho, Yannig Goude and
+#' with contributions and help from Qiwei Yao, Haeran Cho, Yannig Goude and
 #' Tony Aldon.
 #' @references These provide details for the underlying \code{clr} methods.
 #'

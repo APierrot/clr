@@ -11,12 +11,13 @@
 #' data are returned. If \code{newX} is provided then it should contain the
 #' same type of functions as the original ones (same dimension, same clusters
 #' eventually, ...).
-#' @param newclust A new list of id to obtain (approximately) homogeneous
+#' @param newclust A new list of indices to obtain (approximately) homogeneous
 #' dependence structure inside each cluster of functions.
 #' @param newXmean To complete when done
 #' @param simplify If TRUE, one matrix of predicted functions is returned
 #' instead of a list of matrices (one matrix by cluster). In the final matrix,
 #' rows are sorted by increasing row numbers.
+#' @param ... Further arguments are ignored.
 #'
 #' @return predicted functions
 #'
@@ -24,9 +25,6 @@
 #'
 #' @examples
 #' library(clr)
-#'
-#' Sys.setenv(TZ = 'Europe/London')
-#' # PB between High Sierra and R
 #' data(gb_load)
 #'
 #' clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
@@ -69,12 +67,12 @@
 #' head(pred_on_test)
 #'
 #' # With dates as row names
-#' row.names(pred_on_test) <- row.names(Y_test)
+#' row.names(pred_on_test) <- row.names(Y_test)[as.numeric(row.names(pred_on_test))]
 
 
 
 predict.clr <- function(object, newX = NULL, newclust = NULL,
-                        newXmean = NULL, simplify = FALSE) {
+                        newXmean = NULL, simplify = FALSE, ...) {
 
   nclust <- length(object)
 

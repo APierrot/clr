@@ -6,7 +6,7 @@
 #' temperature depending on population geographical distribution.
 #'
 #' @docType data
-#' @author Amandine Pierrot <amandine.m.pierrot@gmail.com>
+#' @author Amandine Pierrot <amandine.m.pierrot@@gmail.com>
 #' @format A data frame with 105216 rows and 7 variables: \describe{
 #'   \item{SETTLEMENT_DATE}{date, the time zone being Europe/London}
 #'   \item{SETTLEMENT_PERIOD}{time of the day}

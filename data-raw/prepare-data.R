@@ -12,8 +12,6 @@ source(file.path('data-raw', 'trick-functions.R'))
 # LOAD DATA --------------------------------------------------------------------
 
 # IMPORT
-# Sys.setenv(TZ = 'Europe/London')
-# PB between OS High Sierra and R
 
 gb_load <- read.csv(file.path(data_dir, 'DemandData_2011-2016.csv'), sep = ',') %>%
   dplyr::select(SETTLEMENT_DATE, SETTLEMENT_PERIOD, ENGLAND_WALES_DEMAND) %>%

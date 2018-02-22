@@ -2,17 +2,17 @@
 % Please edit documentation in R/manage-data.R
 \name{clrdata}
 \alias{clrdata}
-\title{Create an object of class clrdata}
+\title{Create an object of \code{clrdata}}
 \usage{
 clrdata(x, order_by, support_grid)
 }
 \arguments{
-\item{x}{a vector containing the time series values}
+\item{x}{A vector containing the time series values}
 
-\item{order_by}{a corresponding vector of unique time-dates - must be of
+\item{order_by}{A corresponding vector of unique time-dates - must be of
 class 'POSIXct'}
 
-\item{support_grid}{a vector corresponding to the support grid of functional
+\item{support_grid}{A vector corresponding to the support grid of functional
 data}
 }
 \value{
@@ -25,16 +25,12 @@ inputs.
 }
 \examples{
 library(clr)
-
-Sys.setenv(TZ = 'Europe/London')
-PB OS High Sierra / R
 data(gb_load)
 
 clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
                     order_by = gb_load$TIMESTAMP,
                     support_grid = 1:48)
 
-View(clr_load)
 head(clr_load)
 dim(clr_load)
 summary(clr_load)

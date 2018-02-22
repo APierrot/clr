@@ -1,7 +1,8 @@
 
 #' Curve Linear Regression via dimension reduction
 #'
-#' blabla
+#' Fits a curve linear regression (CLR) model to data, using dimension
+#' reduction based on singular value decomposition.
 #'
 #' @param Y An object of class \code{clrdata} or \code{matrix}, of the response
 #' curves (one curve a row).
@@ -24,12 +25,12 @@
 #' predictions.
 #' This \code{clr} object is a list of lists: one list by cluster of data, each
 #' list including:
-#' \item{residuals}{A matrix of the residuals of d_hat simple linear
+#' \item{residuals}{The matrix of the residuals of d_hat simple linear
 #' regressions.}
-#' \item{b_hat}{A vector of the estimated coefficient of the d_hat simple
+#' \item{b_hat}{The vector of the estimated coefficient of the d_hat simple
 #' straight line regressions.}
-#' \item{eta}{A matrix of the projections of X.}
-#' \item{xi}{A matrix of the projections of Y.}
+#' \item{eta}{The matrix of the projections of X.}
+#' \item{xi}{The matrix of the projections of Y.}
 #' \item{qx_hat}{The estimated dimension of X.}
 #' \item{qy_hat}{The estimated dimension of Y.}
 #' \item{d_hat}{The estimated correlation dimension.}
@@ -37,19 +38,19 @@
 #' \item{X_sd}{The standard deviation of the regressor curves.}
 #' \item{Y_mean}{The mean of the response curves.}
 #' \item{ortho_Y}{The value which was selected for ortho_Y.}
-#' \item{GAMMA}
-#' \item{INV_DELTA}
-#' \item{phi}
-#' \item{idx}
-#' \item{X}
-#' \item{Y}
+#' \item{GAMMA}{The standardized transformation for X.}
+#' \item{INV_DELTA}{The standardized transformation for Y to predict if ortho_Y
+#' was set to TRUE.}
+#' \item{phi}{The eigenvectors for Y to predict if ortho_Y was set to FALSE.}
+#' \item{idx}{The indices of the rows selected from X and Y for the current
+#' cluster.}
+#'
+#' @importFrom stats cov lm sd var
 #'
 #' @export
 #'
 #' @examples
 #' library(clr)
-#'
-#' Sys.setenv(TZ = 'Europe/London') # PB between High Sierra and R
 #' data(gb_load)
 #' data(clust_train)
 #'
@@ -82,8 +83,7 @@ clr <- function(Y, X, clust = NULL,
                 qy_estimation = list(method = 'pctvar',
                                      param = 0.999),
                 d_estimation = list(method = 'cor',
-                                    param = 0.5),
-                keepData = FALSE) {
+                                    param = 0.5)) {
 
   # Conditions on data trains
   if (!is.matrix(Y) | !is.matrix(X)) {
@@ -97,7 +97,6 @@ clr <- function(Y, X, clust = NULL,
   # option clust
   if (is.null(clust)) {
     clust <- list(1:nrow(Y))
-    #names(clust[[1]]) <- rownames(Y)
   }
 
   nclust <- length(clust)
@@ -127,8 +126,8 @@ clr <- function(Y, X, clust = NULL,
 
   if (qx_estimation$method == 'fixed' &
       (qx_estimation$param <= 0 | qx_estimation$param > X_nu)) {
-    stop(pasteO('qx_estimation$param value has to be positive and lower than ',
-                'the dimension of X'))
+    stop(paste('qx_estimation$param value has to be positive and lower than',
+               'the dimension of X'))
   }
 
 
@@ -154,8 +153,8 @@ clr <- function(Y, X, clust = NULL,
 
   if (qy_estimation$method == 'fixed' &
       (qy_estimation$param <= 0 | qy_estimation$param > Y_nu)) {
-    stop(pasteO('qy_estimation$param value has to be positive and lower than ',
-                'the dimension of Y'))
+    stop(paste('qy_estimation$param value has to be positive and lower than',
+               'the dimension of Y'))
   }
 
   # Conditions on d_estimation
@@ -333,8 +332,6 @@ clr <- function(Y, X, clust = NULL,
     }
 
     object[[i]]$idx <- idx
-    object[[i]]$X <- X_clust
-    object[[i]]$Y <- Y_clust
 
   }
 
@@ -342,5 +339,4 @@ clr <- function(Y, X, clust = NULL,
   return(object)
 }
 
-# faire une fonction summary ?
 

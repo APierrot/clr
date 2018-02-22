@@ -3,7 +3,6 @@
 \docType{package}
 \name{clr-package}
 \alias{clr-package}
-\alias{clr}
 \title{Curve Linear Regression}
 \description{
 \code{clr} provides functions for curve linear regression via dimension
@@ -33,7 +32,7 @@ Antoniadis and Xavier Brossat, 35-54, Springer.
 \author{
 Amandine Pierrot <amandine.m.pierrot@gmail.com>
 
-with contributions and/or help from Qiwei Yao, Haeran Cho, Yannig Goude and
+with contributions and help from Qiwei Yao, Haeran Cho, Yannig Goude and
 Tony Aldon.
 }
 \keyword{package}

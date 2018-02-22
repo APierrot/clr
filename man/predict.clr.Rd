@@ -2,22 +2,41 @@
 % Please edit documentation in R/predict-clr.R
 \name{predict.clr}
 \alias{predict.clr}
-\title{Model predictions with Curve Linear Regression}
+\title{Prediction from fitted CLR model(s)}
 \usage{
 \method{predict}{clr}(object, newX = NULL, newclust = NULL,
-  newXmean = NULL)
+  newXmean = NULL, simplify = FALSE, ...)
 }
 \arguments{
-\item{newclust}{}
+\item{object}{A fitted \code{clr} object produced by \code{clr()}.}
+
+\item{newX}{An object of class \code{clrdata} or a matrix with one function a
+row. If this is not provided then predictions corresponding to the original
+data are returned. If \code{newX} is provided then it should contain the
+same type of functions as the original ones (same dimension, same clusters
+eventually, ...).}
+
+\item{newclust}{A new list of indices to obtain (approximately) homogeneous
+dependence structure inside each cluster of functions.}
+
+\item{newXmean}{To complete when done}
+
+\item{simplify}{If TRUE, one matrix of predicted functions is returned
+instead of a list of matrices (one matrix by cluster). In the final matrix,
+rows are sorted by increasing row numbers.}
+
+\item{...}{Further arguments are ignored.}
+}
+\value{
+predicted functions
 }
 \description{
-Model predictions with Curve Linear Regression
+Takes a fitted \code{clr} object produced by \code{clr()} and produces
+predictions given a new set of functions or the original values used for
+the model fit.
 }
 \examples{
 library(clr)
-
-Sys.setenv(TZ = 'Europe/London')
-# PB between High Sierra and R
 data(gb_load)
 
 clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
@@ -33,6 +52,7 @@ X <- clr_load[1:(nrow(clr_load) - 1), ]
 begin_pred <- which(substr(rownames(Y), 1, 4) == '2016')[1]
 Y_train <- Y[1:(begin_pred - 1), ]
 X_train <- X[1:(begin_pred - 1), ]
+Y_test <- Y[begin_pred:nrow(Y), ]
 X_test <- X[begin_pred:nrow(X), ]
 
 
@@ -50,6 +70,14 @@ head(pred_on_test[[1]])
 model <- clr(Y = Y_train, X = X_train, clust = clust_train)
 
 pred_on_train <- predict(model)
-pred_on_test <- predict(model, newX = X_test, newclust = clust_test)
-head(pred_on_test[[1]])
+str(pred_on_train)
+head(pred_on_train[[1]])
+
+pred_on_test <- predict(model, newX = X_test, newclust = clust_test,
+                        simplify = TRUE)
+str(pred_on_test)
+head(pred_on_test)
+
+# With dates as row names
+row.names(pred_on_test) <- row.names(Y_test)[as.numeric(row.names(pred_on_test))]
 }
