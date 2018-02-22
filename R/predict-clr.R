@@ -136,6 +136,7 @@ predict.clr <- function(object, newX = NULL, newclust = NULL,
       }
 
       row.names(Y_hat) <- object[[i]]$idx
+      colnames(Y_hat) <- names(object[[i]]$Y_mean)
       predictions[[i]] <- Y_hat
 
     } else {
@@ -194,6 +195,7 @@ predict.clr <- function(object, newX = NULL, newclust = NULL,
       }
 
       row.names(Y_hat) <- idx
+      colnames(Y_hat) <- names(object[[i]]$Y_mean)
       predictions[[i]] <- Y_hat
     }
 
