@@ -1,5 +1,9 @@
 
+source(file.path('data-raw', 'trick-functions.R'))
+
 data(gb_load)
+data(clust_train)
+data(clust_test)
 
 clr_load <- clrdata(x = gb_load$ENGLAND_WALES_DEMAND,
                     order_by = gb_load$TIMESTAMP,
@@ -17,12 +21,50 @@ X_train <- X[1:(begin_pred - 1), ]
 Y_test <- Y[begin_pred:nrow(Y), ]
 X_test <- X[begin_pred:nrow(X), ]
 
-## Example without any cluster
+## Example with only load and without any cluster
 model <- clr(Y = Y_train, X = X_train)
-pred_on_test <- predict(model, newX = X_test, simplify = TRUE)
+pred_on_train <- predict(model, simplify = TRUE)
+raw_res <- Y_train[as.numeric(rownames(pred_on_train)), ] - pred_on_train
+norm_res <- raw_res / Y_train[as.numeric(rownames(pred_on_train)), ]
+rmse(raw_res, 0) # 1334
+mape(norm_res, 2) # 3.06
 
-## Example with clusters
+pred_on_test <- predict(model, newX = X_test, simplify = TRUE)
+n <- nrow(pred_on_test) - sum(is.na(rowSums(pred_on_test)))
+# 362
+raw_res <- Y_test[as.numeric(rownames(pred_on_test)), ] - pred_on_test
+norm_res <- raw_res / Y_test[as.numeric(rownames(pred_on_test)), ]
+rmse(raw_res, 0) # 1626
+mape(norm_res, 2) # 4.07
+
+
+## Example with only load and with clusters
 model <- clr(Y = Y_train, X = X_train, clust = clust_train)
+
+pred_on_train <- predict(model, simplify = TRUE)
+n <- nrow(pred_on_train) - sum(is.na(rowSums(pred_on_train)))
+# 1724
+raw_res <- Y_train[as.numeric(rownames(pred_on_train)), ] - pred_on_train
+norm_res <- raw_res / Y_train[as.numeric(rownames(pred_on_train)), ]
+rmse(raw_res, 0) # 717
+mape(norm_res, 2) # 1.55
+
 pred_on_test <- predict(model, newX = X_test, newclust = clust_test,
                         simplify = TRUE)
-ow.names(pred_on_test) <- row.names(Y_test)[as.numeric(row.names(pred_on_test))]
+n <- nrow(pred_on_test) - sum(is.na(rowSums(pred_on_test)))
+# 346
+raw_res <- Y_test[as.numeric(rownames(pred_on_test)), ] - pred_on_test
+norm_res <- raw_res / Y_test[as.numeric(rownames(pred_on_test)), ]
+rmse(raw_res, 0) # 1152
+mape(norm_res, 2) # 2.74
+
+
+toto <- predict(model, newX = X_train, newclust = clust_train,
+                simplify = TRUE)
+n <- nrow(toto) - sum(is.na(rowSums(toto)))
+# 1724
+raw_res <- Y_train[as.numeric(rownames(toto)), ] - toto
+norm_res <- raw_res / Y_train[as.numeric(rownames(toto)), ]
+rmse(raw_res, 0) # 2782
+mape(norm_res, 2) # 6.02
+# OK il y définitivement un PB avec newX et newclust !

@@ -139,10 +139,12 @@ predict.clr <- function(object, newX = NULL, newclust = NULL,
       colnames(Y_hat) <- names(object[[i]]$Y_mean)
       predictions[[i]] <- Y_hat
 
+      # End if no newX
+
     } else {
 
       if (is.null(newclust)) {
-        idx <- object[[i]]$idx
+        idx <- 1:nrow(X)
       } else {
         idx <- newclust[[i]]
       }
@@ -161,7 +163,7 @@ predict.clr <- function(object, newX = NULL, newclust = NULL,
       }
       b_hat <- object[[i]]$b_hat
       d_hat <- object[[i]]$d_hat
-      X_nu <- ncol(X_clust)
+      X_nu <- length(X_mean)
       Y_nu <- length(Y_mean)
 
       X_rs <- (X_clust - matrix(X_mean,

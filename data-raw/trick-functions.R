@@ -103,5 +103,17 @@ find_id <- function(Y_info, X_info, clusters) {
 }
 
 
+mape <- function(norm_error, digits = 2, na.rm = TRUE){
+  y <- mean(abs(norm_error), na.rm = na.rm) * 100
+  y <- round(y, digits = digits)
+  y
+}
+
+
+rmse <- function(E, digits = 2, na.rm = TRUE){
+  y <- sqrt(mean(E^2, na.rm = na.rm))
+  y <- round(y, digits = digits)
+  y
+}
 
 

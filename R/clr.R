@@ -227,6 +227,7 @@ clr <- function(Y, X, clust = NULL,
     # var(XX, na.rm = TRUE) = Id
 
 
+
     # Orthogonalize Y: extract low-dim structure of Y_dm
     if (ortho_Y) {
       t2 <- svd(var(Y_dm, na.rm = TRUE))
@@ -287,7 +288,7 @@ clr <- function(Y, X, clust = NULL,
     xi <- YY %*% phi
     eta <- XX %*% psi
 
-    # Transformation matrices for Y, to be used for prediction
+    # Transformation matrices for Y and X, to be used for prediction
     if (ortho_Y) {
       DELTA <- DELTA %*% phi
       if (qy_hat > 1) {
@@ -296,6 +297,8 @@ clr <- function(Y, X, clust = NULL,
         INV_DELTA <- t(phi) %*% t(delta %*% solve(tau[1:qy_hat] ^ (-0.5)))
       }
     }
+
+    GAMMA <- GAMMA %*% psi
 
 
     # PART II: 1-1 LINEAR REGRESSION \xi_j on \eta_j
