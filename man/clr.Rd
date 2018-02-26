@@ -87,3 +87,7 @@ model <- clr(Y = Y_train, X = X_train)
 ## Example with clusters
 model <- clr(Y = Y_train, X = X_train, clust = clust_train)
 }
+\seealso{
+\code{\link{clr-package}}, \code{\link{clrdata}} and
+\code{\link{predict.clr}}.
+}

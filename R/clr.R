@@ -4,6 +4,9 @@
 #' Fits a curve linear regression (CLR) model to data, using dimension
 #' reduction based on singular value decomposition.
 #'
+#' @seealso \code{\link{clr-package}}, \code{\link{clrdata}} and
+#' \code{\link{predict.clr}}.
+#'
 #' @param Y An object of class \code{clrdata} or \code{matrix}, of the response
 #' curves (one curve a row).
 #' @param X An object of class \code{clrdata} or \code{matrix}, of the regressor
