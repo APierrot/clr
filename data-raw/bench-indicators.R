@@ -59,12 +59,38 @@ rmse(raw_res, 0) # 1152
 mape(norm_res, 2) # 2.74
 
 
-toto <- predict(model, newX = X_train, newclust = clust_train,
-                simplify = TRUE)
-n <- nrow(toto) - sum(is.na(rowSums(toto)))
-# 1724
-raw_res <- Y_train[as.numeric(rownames(toto)), ] - toto
-norm_res <- raw_res / Y_train[as.numeric(rownames(toto)), ]
-rmse(raw_res, 0) # 2782
-mape(norm_res, 2) # 6.02
-# OK il y définitivement un PB avec newX et newclust !
+## EXAMPLE WITH TEMPERATURE ----------------------------------------------------
+clr_temp <- clrdata(x = gb_load$TEMPERATURE,
+                    order_by = gb_load$TIMESTAMP,
+                    support_grid = 1:48)
+
+# data cleaning: NA if too missing values in TEMPERATURE
+MV <- gb_load[gb_load$SETTLEMENT_PERIOD == 1, 'MV']
+clr_temp[MV >= 0.6, ] <- NA
+
+X <- cbind(clr_load[1:(nrow(clr_load) - 1), ],
+           clr_temp[row.names(Y), ])
+X_train <- X[1:(begin_pred - 1), ]
+X_test <- X[begin_pred:nrow(X), ]
+
+# No clusters
+model <- clr(Y = Y_train, X = X_train)
+pred_on_test <- predict(model, newX = X_test, simplify = TRUE)
+n <- nrow(pred_on_test) - sum(is.na(rowSums(pred_on_test)))
+# 352
+raw_res <- Y_test[as.numeric(rownames(pred_on_test)), ] - pred_on_test
+norm_res <- raw_res / Y_test[as.numeric(rownames(pred_on_test)), ]
+rmse(raw_res, 0) # 1591
+mape(norm_res, 2) # 3.94
+
+# With clusters
+model <- clr(Y = Y_train, X = X_train, clust = clust_train)
+pred_on_test <- predict(model, newX = X_test, newclust = clust_test,
+                        simplify = TRUE)
+n <- nrow(pred_on_test) - sum(is.na(rowSums(pred_on_test)))
+# 337
+raw_res <- Y_test[as.numeric(rownames(pred_on_test)), ] - pred_on_test
+norm_res <- raw_res / Y_test[as.numeric(rownames(pred_on_test)), ]
+rmse(raw_res, 0) # 1070
+mape(norm_res, 2) # 2.51
+
