@@ -94,3 +94,35 @@ norm_res <- raw_res / Y_test[as.numeric(rownames(pred_on_test)), ]
 rmse(raw_res, 0) # 1070
 mape(norm_res, 2) # 2.51
 
+
+## EXAMPLE OF CORRECTING MEAN
+pred_list <- predict(model, newX = X_test, newclust = clust_test)
+
+# FF = 1
+new_pred <- vector('list', length(pred_list))
+for (c in 1:length(pred_list)){
+  new_pred[[c]] <- pred_list[[c]] - matrix(model[[c]]$Y_mean,
+                                           nrow = nrow(pred_list[[c]]),
+                                           ncol = ncol(pred_list[[c]]),
+                                           byrow = TRUE)
+  newY <- rbind(Y_train[model[[c]]$idx, ],
+                Y_test[clust_test[[c]], ])
+  n <- nrow(Y_train[model[[c]]$idx, ])
+
+  for (i in 1:nrow(new_pred[[c]])) {
+    new_mean <- colMeans(newY[1:(n + i - 1), ], na.rm = TRUE)
+    new_pred[[c]][i, ] <- new_pred[[c]][i, ] + new_mean
+  }
+  print(c)
+}
+
+new_pred <- do.call(rbind, new_pred)
+new_pred <- new_pred[order(as.numeric(row.names(new_pred))), ]
+
+raw_res <- Y_test[as.numeric(rownames(new_pred)), ] - new_pred
+norm_res <- raw_res / Y_test[as.numeric(rownames(new_pred)), ]
+rmse(raw_res, 0) # 1061
+mape(norm_res, 2) # 2.55
+
+# on ne gagne pas grand chose ! voir avec un FF
+
