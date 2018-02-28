@@ -128,8 +128,8 @@ clusters <- cbind(Y_info, X_info) %>%
 clusters <- data.frame(clust = 1:nrow(clusters),
                        clusters)
 
-begin_pred <- which(cluster_data[2:nrow(cluster_data), 'SETTLEMENT_DATE'] ==
-                      '2016-01-01')
+begin_pred <- which(as.character(
+  cluster_data[2:nrow(cluster_data), 'SETTLEMENT_DATE']) == '2016-01-01')
 
 # clusters on train data
 clust_train <- find_id(Y_info = Y_info[1:(begin_pred - 1), ],
@@ -143,9 +143,18 @@ save(clust_train, file = file.path('data', 'clust_train.RData'))
 
 # clusters on test data
 clust_test <- find_id(Y_info = Y_info[begin_pred:nrow(Y_info), ],
-                       X_info = X_info[begin_pred:nrow(X_info), ],
-                       clusters = clusters)
+                      X_info = X_info[begin_pred:nrow(X_info), ],
+                      clusters = clusters)
 clust_test <- clust_test[n_byclust > 5]
+# keep only clusters with 5 obs for fitting
 
 save(clust_test, file = file.path('data', 'clust_test.RData'))
+
+
+# clusters on all data
+clust <- find_id(Y_info = Y_info,
+                 X_info = X_info,
+                 clusters = clusters)
+# keep only clusters with 5 obs on fitting period
+clust <- clust[n_byclust > 5]
 

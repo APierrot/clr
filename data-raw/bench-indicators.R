@@ -124,5 +124,38 @@ norm_res <- raw_res / Y_test[as.numeric(rownames(new_pred)), ]
 rmse(raw_res, 0) # 1061
 mape(norm_res, 2) # 2.55
 
-# on ne gagne pas grand chose ! voir avec un FF
+# ...
+
+
+## EXAMPLE OF REFITTING BEFORE EACH FORECAST
+# clust computed in prepare-data.R
+online_pred <- matrix(NA,
+                      nrow = length(begin_pred:nrow(Y)),
+                      ncol = ncol(Y),
+                      dimnames = list(begin_pred:nrow(Y),
+                                      colnames(Y)))
+
+for (i in begin_pred:nrow(Y)) {
+
+  c <- which(unlist(lapply(clust, function(x) i %in% x)))
+
+  if (sum(c) > 0) {
+    temp_clust <- clust[[c]][clust[[c]] < i]
+    model <- clr(Y = Y[1:(i-1), ], X = X[1:(i-1), ],
+                 clust = list(temp_clust))
+    pred <- predict(model, newX = X, newclust = list(clust[[c]]),
+                    simplify = TRUE)
+    online_pred[paste(i), ] <- pred[paste(i), ]
+  }
+
+}
+
+raw_res <- Y_test - online_pred
+norm_res <- raw_res / Y_test
+rmse(raw_res, 0) # 1051
+mape(norm_res, 2) # 2.47
+# fitting window could be optimized
+
+
+
 
