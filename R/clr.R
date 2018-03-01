@@ -170,6 +170,10 @@ clr <- function(Y, X, clust = NULL,
     stop('param value has to be between 0 and 1 ')
   }
 
+  if (d_estimation$method == 'cor' & ortho_Y == FALSE) {
+    stop('cor method should be used only with ortho_Y set to TRUE')
+  }
+
 
   object <- vector('list', nclust)
 
