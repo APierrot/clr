@@ -87,12 +87,12 @@ mape(norm_res, 2) # 3.94
 model <- clr(Y = Y_train, X = X_train, clust = clust_train)
 pred_on_test <- predict(model, newX = X_test, newclust = clust_test,
                         simplify = TRUE)
-n <- nrow(pred_on_test) - sum(is.na(rowSums(pred_on_test)))
-# 337
 raw_res <- Y_test[as.numeric(rownames(pred_on_test)), ] - pred_on_test
 norm_res <- raw_res / Y_test[as.numeric(rownames(pred_on_test)), ]
 rmse(raw_res, 0) # 1070
 mape(norm_res, 2) # 2.51
+n <- nrow(raw_res) - sum(is.na(rowSums(raw_res)))
+# 335
 
 
 ## EXAMPLE OF CORRECTING MEAN
@@ -155,7 +155,5 @@ norm_res <- raw_res / Y_test
 rmse(raw_res, 0) # 1051
 mape(norm_res, 2) # 2.47
 # fitting window could be optimized
-
-
 
 
