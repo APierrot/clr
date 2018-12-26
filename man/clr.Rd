@@ -5,8 +5,8 @@
 \title{Curve Linear Regression via dimension reduction}
 \usage{
 clr(Y, X, clust = NULL, qx_estimation = list(method = "pctvar", param =
-  0.999), ortho_Y = TRUE, qy_estimation = list(method = "pctvar", param =
-  0.999), d_estimation = list(method = "cor", param = 0.5))
+  0.999), ortho_Y = TRUE, qy_estimation = list(method = "pctvar", param
+  = 0.999), d_estimation = list(method = "cor", param = 0.5))
 }
 \arguments{
 \item{Y}{An object of class \code{clrdata} or \code{matrix}, of the response
