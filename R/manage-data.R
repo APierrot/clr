@@ -62,7 +62,7 @@ clrdata <- function(x, order_by, support_grid) {
   df <- df %>%
     dplyr::mutate(date = lubridate::date(order_by)) %>%
     dplyr::group_by(date) %>%
-    dplyr::mutate(n_instants = dplyr::n_distinct(order_by)) %>%
+    dplyr::mutate(n_instants = dplyr::n()) %>%
     dplyr::ungroup() %>%
     dplyr::filter(n_instants == nu)
 
