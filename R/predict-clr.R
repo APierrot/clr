@@ -67,7 +67,7 @@
 #' head(pred_on_test)
 #'
 #' # With dates as row names
-#' row.names(pred_on_test) <- row.names(Y_test)[as.numeric(row.names(pred_on_test))]
+#' rownames(pred_on_test) <- rownames(Y_test)[as.numeric(rownames(pred_on_test))]
 
 
 
