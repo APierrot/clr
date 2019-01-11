@@ -18,6 +18,8 @@ data}
 \value{
 An object of class \code{clrdata} with one function a row. As it
 inherits the \code{matrix} class, all \code{matrix} methods remain valid.
+If time-dates are missing in x, corresponding NA functions are added by
+\code{clrdata} so that time sequence is preserved between successive rows.
 }
 \description{
 \code{clrdata} is used to create a \code{clrdata} object from raw data

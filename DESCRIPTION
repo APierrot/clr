@@ -1,7 +1,7 @@
 Package: clr
 Type: Package
 Title: Curve Linear Regression via Dimension Reduction
-Version: 0.1.1.9000
+Version: 0.1.1
 Author: Amandine Pierrot 
     with contributions and/or help from Qiwei Yao, Haeran Cho, Yannig Goude and 
     Tony Aldon.
