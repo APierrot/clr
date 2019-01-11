@@ -1,3 +1,14 @@
+# script.R
+#
+# Copyright (c) EDF R&D 2017
+# Author : Amandine PIERROT - amandine.m.pierrot@gmail.com
+#
+# ------------------------------------------------------------------------------
+#
+# Trick functions for clr
+#
+# ------------------------------------------------------------------------------
+
 library(dplyr)
 library(lubridate)
 
@@ -47,7 +58,6 @@ create_calendar <- function(freq, begin_date, end_date){
   )
   return(calendar)
 }
-
 
 
 create_theo_cal <- function(data_freq) {
