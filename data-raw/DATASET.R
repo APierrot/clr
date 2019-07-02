@@ -1,3 +1,4 @@
+## code to prepare `DATASET` dataset goes here
 
 # PACKAGES
 library(dplyr)
@@ -74,7 +75,7 @@ station_pop[station_pop[['town']] == 'LIVERPOOL_CROSBY',
 station_pop <- station_pop %>%
   mutate(weight = pop / sum(pop))
 raw_temperatures <- tidyr::spread(interpol_data[, c('code', 'timestamp', 'value')],
-                                 code, value)
+                                  code, value)
 is_mv <- tidyr::spread(interpol_data[, c('code', 'timestamp', 'mv')],
                        code, mv)
 gb_weather <- data.frame(TIMESTAMP = interpol_data[['timestamp']],
@@ -92,7 +93,7 @@ gb_load <- dplyr::left_join(gb_load, gb_weather, by = 'TIMESTAMP') %>%
 # DAY TYPES --------------------------------------------------------------------
 bank_hol <- timeDate::holidayLONDON(
   unique(lubridate::year(gb_load[['TIMESTAMP']]))
-  )
+)
 bank_hol <- lubridate::with_tz(as.POSIXct(bank_hol), tzone = 'Europe/London')
 gb_load <- gb_load %>%
   mutate(wday7 = lubridate::wday(TIMESTAMP),
@@ -158,4 +159,7 @@ clust <- find_id(Y_info = Y_info,
                  clusters = clusters)
 # keep only clusters with 5 obs on fitting period
 clust <- clust[n_byclust > 5]
+
+usethis::use_data("DATASET")
+
 

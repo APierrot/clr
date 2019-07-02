@@ -2,7 +2,7 @@
 * local OS X install, R 3.6.0
 
 ## Update
-suppress .rda data files, keep only .RData ones 
+suppress .RData files, keep only .rda ones 
 (mail from Kurt Hornik, 2019/06/27)
 
 ## R CMD check results
