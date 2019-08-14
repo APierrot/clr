@@ -88,7 +88,7 @@ clr <- function(Y, X, clust = NULL,
                 d_estimation = list(method = 'cor',
                                     param = 0.5)) {
 
-  # Conditions on data trains
+  # Conditions on data training sets
   if (!is.matrix(Y) | !is.matrix(X)) {
     stop('Y and X should be matrices')
   }
